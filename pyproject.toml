@@ -4,11 +4,22 @@ version = "0.1.0"
 description = ""
 authors = ["bartosz121 <bmagiera121@gmail.com>"]
 readme = "README.md"
-packages = [{include = "reshal_api"}]
+packages = [{ include = "reshal_api" }]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
+fastapi = "^0.95.1"
+uvicorn = { extras = ["standard"], version = "^0.21.1" }
+orjson = "^3.8.10"
+pyhumps = "^3.8.0"
+sqlalchemy = { extras = ["asyncio"], version = "^2.0.9" }
 
+
+[tool.poetry.group.dev.dependencies]
+black = { version = "^23.3.0", allow-prereleases = true }
+ruff = "^0.0.262"
+pytest = "^7.3.1"
+pytest-asyncio = "^0.21.0"
 
 [build-system]
 requires = ["poetry-core"]
