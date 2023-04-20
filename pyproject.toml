@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "reshal-api"
+version = "0.1.0"
+description = ""
+authors = ["bartosz121 <bmagiera121@gmail.com>"]
+readme = "README.md"
+packages = [{include = "reshal_api"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
