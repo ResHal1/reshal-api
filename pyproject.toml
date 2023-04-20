@@ -14,12 +14,18 @@ orjson = "^3.8.10"
 pyhumps = "^3.8.0"
 sqlalchemy = { extras = ["asyncio"], version = "^2.0.9" }
 
+[tool.poetry.scripts]
+reshal-api = "reshal_api.main:run"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [tool.poetry.group.dev.dependencies]
 black = { version = "^23.3.0", allow-prereleases = true }
 ruff = "^0.0.262"
 pytest = "^7.3.1"
 pytest-asyncio = "^0.21.0"
+httpx = "^0.24.0"
 
 [build-system]
 requires = ["poetry-core"]
