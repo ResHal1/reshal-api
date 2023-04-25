@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  api:
+    container_name: reshal-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENVIRONMENT=LOCAL
+      - UVICORN_HOST=0.0.0.0
+      - UVICORN_PORT=8080
+      - UVICORN_RELOAD=true
+      - UVICORN_WORKERS=1
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=reshal
+      - DB_PASSWORD=reshal123
+      - DB_NAME=reshaldb
+    depends_on:
+      - db
+
+  db:
+    container_name: reshal-db
+    image: postgres:15.2-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: reshal
+      POSTGRES_PASSWORD: reshal123
+      POSTGRES_DB: reshaldb
+
+
+volumes:
+  pg_data:
+    driver: "local"
