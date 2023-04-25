@@ -7,6 +7,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from reshal_api.auth.models import User  # noqa: F401
 from reshal_api.config import DatabaseSettings
 from reshal_api.database import Base
 
