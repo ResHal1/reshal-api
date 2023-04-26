@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from reshal_api.auth.router import router as auth_router
 from reshal_api.config import CORSSettings, UvicornSettings, get_config
 from reshal_api.lifespan import lifespan
 
@@ -18,6 +19,7 @@ app = FastAPI(
 )
 
 app.add_middleware(CORSMiddleware, **CORSSettings().dict())
+app.include_router(auth_router, prefix="/auth")
 
 
 @app.get("/")
