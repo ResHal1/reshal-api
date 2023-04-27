@@ -58,7 +58,7 @@ class DatabaseSettings(BaseSettings):
 
     @property
     def url(self) -> str:
-        return f"postgresql+asyncpg://reshal:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.NAME}"
+        return f"postgresql+asyncpg://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.NAME}"
 
 
 class Config(BaseSettings):
