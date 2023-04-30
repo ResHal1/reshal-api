@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from reshal_api.auth.router import router as auth_router
 from reshal_api.config import CORSSettings, UvicornSettings, get_config
+from reshal_api.facility.router import router as facility_router
 from reshal_api.lifespan import lifespan
 
 config = get_config()
@@ -19,7 +21,9 @@ app = FastAPI(
 )
 
 app.add_middleware(CORSMiddleware, **CORSSettings().dict())
+app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
 app.include_router(auth_router, prefix="/auth")
+app.include_router(facility_router, prefix="/facilities")
 
 
 @app.get("/")

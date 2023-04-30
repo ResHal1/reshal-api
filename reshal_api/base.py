@@ -2,7 +2,7 @@
 Contains base classes for models, services, services, and dependencies
 """
 
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, Sequence, TypeVar
 
 import humps
 import orjson
@@ -59,7 +59,7 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         create_obj_dict = dict(create_obj)
         db_obj = self._model(**create_obj_dict)
         session.add(db_obj)
-        await session.commit()
+        await session.flush()
 
         return db_obj
 
@@ -85,7 +85,7 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         limit: int = 100,
         options: Optional[list[ExecutableOption]] = None,
         **kwargs
-    ) -> list[ModelType]:
+    ) -> Sequence[ModelType]:
         """Return a list of results that match the given filters"""
         q = self._create_query(options)
         result = await session.execute(
@@ -100,7 +100,7 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *args,
         options: Optional[list[ExecutableOption]] = None,
         **kwargs
-    ) -> list[ModelType]:
+    ) -> Sequence[ModelType]:
         """Return a list of all results that match the given filters"""
         q = self._create_query(options)
         result = await session.execute(q.filter(*args).filter_by(**kwargs))
@@ -126,7 +126,7 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 setattr(db_obj, field, update_data[field])
 
             session.add(db_obj)
-            await session.commit()
+            await session.flush()
 
         return db_obj
 
@@ -136,5 +136,4 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj = db_obj or await self.get(session, *args, **kwargs)
         if db_obj:
             await session.delete(db_obj)
-            await session.commit()
         return db_obj

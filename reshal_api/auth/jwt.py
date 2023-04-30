@@ -19,7 +19,7 @@ oauth2_scheme = OAuth2PasswordBearerCookie(token_url="/auth/token")
 def create_access_token(user: User) -> str:
     expire = datetime.utcnow() + timedelta(minutes=config.ACCESS_TOKEN_EXPIRE)
     return jwt.encode(
-        {"exp": expire, "user_id": str(user.id), "is_superuser": user.is_superuser},
+        {"exp": expire, "user_id": str(user.id), "role": user.role},
         key=config.SECRET_KEY,
         algorithm=config.JWT_ALGORITHM,
     )

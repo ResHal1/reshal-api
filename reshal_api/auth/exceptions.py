@@ -17,6 +17,10 @@ class UserIsNotSuperuser(Forbidden):
     ...
 
 
+class UserRoleNotSufficient(Forbidden):
+    ...
+
+
 class EmailAlreadyExists(Conflict):
     def __init__(self):
         super().__init__(detail="Email already exists")

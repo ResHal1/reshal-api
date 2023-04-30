@@ -52,13 +52,14 @@ class DatabaseSettings(BaseSettings):
     HOST: str = "127.0.0.1"
     PORT: int = 5432
     NAME: str = "reshaldb"
+    DRIVER: str = "asyncpg"
 
     class Config:
         env_prefix = "DB_"
 
     @property
     def url(self) -> str:
-        return f"postgresql+asyncpg://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.NAME}"
+        return f"postgresql+{self.DRIVER}://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.NAME}"
 
 
 class Config(BaseSettings):
@@ -70,6 +71,7 @@ class Config(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_COOKIE_NAME: str = "reshal_access_token"
     ACCESS_TOKEN_EXPIRE: int = 43800  # 30 days
+    STATIC_DIR: str = "static"
 
     class Config:
         env_prefix = "APP_"
