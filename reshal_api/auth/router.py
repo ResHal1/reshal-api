@@ -5,7 +5,7 @@ from reshal_api import exceptions
 from reshal_api.config import get_config
 from reshal_api.database import get_db_session
 
-from .dependencies import get_auth_service, get_superuser, get_user
+from .dependencies import get_admin, get_auth_service, get_user
 from .exceptions import EmailAlreadyExists
 from .jwt import create_access_token
 from .models import User
@@ -16,7 +16,7 @@ config = get_config()
 router = APIRouter(tags=["auth"])
 
 
-@router.get("/", response_model=list[UserRead], dependencies=[Depends(get_superuser)])
+@router.get("/", response_model=list[UserRead], dependencies=[Depends(get_admin)])
 async def get_users(
     session: AsyncSession = Depends(get_db_session),
     auth_service: AuthService = Depends(get_auth_service),
@@ -84,7 +84,9 @@ async def auth_user(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.get(
+    "/logout", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_user)]
+)
 async def logout(response: Response):
     response.delete_cookie(config.ACCESS_TOKEN_COOKIE_NAME)
     response.status_code = status.HTTP_204_NO_CONTENT

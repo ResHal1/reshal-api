@@ -5,14 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.database import get_db_session
 
-from .exceptions import UserIsNotSuperuser, UserNotFound
+from .exceptions import UserIsNotSuperuser, UserNotFound, UserRoleNotSufficient
 from .jwt import get_data_from_token
-from .models import User
+from .models import User, UserRole
 from .schemas import JWTData
 from .service import AuthService
 
 
-def get_auth_service() -> AuthService:
+async def get_auth_service() -> AuthService:
     return AuthService()
 
 
@@ -27,7 +27,13 @@ async def get_user(
     return user
 
 
-async def get_superuser(user: User = Depends(get_user)) -> User:
-    if not user.is_superuser:
+async def get_owner(user: User = Depends(get_user)) -> User:
+    if user.role not in (UserRole.owner, UserRole.admin):
+        raise UserRoleNotSufficient()
+    return user
+
+
+async def get_admin(user: User = Depends(get_user)) -> User:
+    if user.role != UserRole.admin:
         raise UserIsNotSuperuser()
     return user

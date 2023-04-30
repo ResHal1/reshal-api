@@ -6,6 +6,8 @@ from pydantic import EmailStr, Extra, validator
 
 from reshal_api.base import ORJSONBaseModel
 
+from .models import UserRole
+
 # Validators
 EMAIL_BLACKLIST_REGEX = re.compile(
     r"^(admin|administrator|root|sysadmin|me|sales|info|support|contact|help|feedback|abuse|webmaster|postmaster|noreply|marketing|spam)@"
@@ -37,7 +39,7 @@ class UserRead(ORJSONBaseModel):
     email: EmailStr
     first_name: str
     last_name: str
-    is_superuser: bool
+    role: UserRole
 
     class Config:
         orm_mode = True
@@ -88,7 +90,7 @@ class AuthRequest(ORJSONBaseModel):
 
 class JWTData(ORJSONBaseModel):
     user_id: uuid.UUID
-    is_superuser: bool
+    role: UserRole
 
 
 class AccessTokenResponse(ORJSONBaseModel):
