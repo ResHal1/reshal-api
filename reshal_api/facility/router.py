@@ -13,6 +13,7 @@ from reshal_api.auth.models import User, UserRole
 from reshal_api.auth.service import AuthService
 from reshal_api.database import get_db_session
 from reshal_api.exceptions import Conflict, Forbidden, NotFound
+from reshal_api.reservation.schemas import ReservationReadBase
 
 from .dependencies import (
     facility_exists,
@@ -105,6 +106,16 @@ async def get_facility_images(
 ):
     images = await facility_image_service.get_all(session, facility_id=facility_id)
     return images
+
+
+@router.get("/{facility_id}/reservations", response_model=list[ReservationReadBase])
+async def get_reservations_for_facility(
+    facility_id: str,
+    session: AsyncSession = Depends(get_db_session),
+    facility: Facility = Depends(facility_exists),
+):
+    await session.refresh(facility, ["reservations"])
+    return facility.reservations
 
 
 @router.post(
