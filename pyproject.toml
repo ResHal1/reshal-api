@@ -21,6 +21,7 @@ asyncpg = "^0.27.0"
 aiofiles = "^23.1.0"
 python-multipart = "^0.0.6"
 pillow = "^9.5.0"
+pytz = "^2023.3"
 
 [tool.poetry.scripts]
 reshal-api = "reshal_api.main:run"
