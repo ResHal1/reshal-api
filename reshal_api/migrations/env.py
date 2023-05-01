@@ -11,6 +11,9 @@ from reshal_api.auth.models import User  # noqa: F401
 from reshal_api.config import DatabaseSettings
 from reshal_api.database import Base
 from reshal_api.facility.models import Facility, FacilityImage  # noqa: F401
+from reshal_api.payment.models import Payment  # noqa: F401
+from reshal_api.reservation.models import Reservation  # noqa: F401
+from reshal_api.timeframe.models import TimeFrame  # noqa: F401
 
 db_conf = DatabaseSettings()
 config = context.config

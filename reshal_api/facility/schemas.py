@@ -41,8 +41,11 @@ class FacilityBase(ORJSONBaseModel):
         orm_mode = True
 
 
-class FacilityRead(FacilityBase):
+class FacilityReadBase(FacilityBase):
     id: uuid.UUID
+
+
+class FacilityRead(FacilityReadBase):
     owners: list[UserRead]
     images: list[FacilityImageRead]
 
