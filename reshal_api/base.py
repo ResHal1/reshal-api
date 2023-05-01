@@ -2,6 +2,7 @@
 Contains base classes for models, services, services, and dependencies
 """
 
+from datetime import datetime
 from typing import Any, Generic, Optional, Sequence, TypeVar
 
 import humps
@@ -34,6 +35,11 @@ class ORJSONBaseModel(BaseModel):
         allow_population_by_field_name = True
 
 
+class TimestampSchema(BaseModel):
+    created_at: datetime
+    updated_at: datetime
+
+
 # Generic CRUD Service
 
 
@@ -54,9 +60,14 @@ class BaseCRUDService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return q
 
     async def create(
-        self, session: AsyncSession, create_obj: CreateSchemaType
+        self,
+        session: AsyncSession,
+        create_obj: CreateSchemaType | dict[str, Any],
     ) -> ModelType:
-        create_obj_dict = dict(create_obj)
+        if isinstance(create_obj, dict):
+            create_obj_dict = create_obj
+        else:
+            create_obj_dict = dict(create_obj)
         db_obj = self._model(**create_obj_dict)
         session.add(db_obj)
         await session.flush()
