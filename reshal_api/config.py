@@ -64,6 +64,7 @@ class DatabaseSettings(BaseSettings):
 
 class Config(BaseSettings):
     TITLE: str = "Reshal API"
+    OTLP_APP_NAME: str = TITLE.replace(" ", "_").lower()
     VERSION: str = __version__
     ROOT_PATH: str = "/"
     ENVIRONMENT: Environment = Environment.LOCAL
@@ -72,6 +73,7 @@ class Config(BaseSettings):
     ACCESS_TOKEN_COOKIE_NAME: str = "reshal_access_token"
     ACCESS_TOKEN_EXPIRE: int = 43800  # 30 days
     STATIC_DIR: str = "static"
+    OTLP_GRPC_ENDPOINT: str = "http://tempo:4317"
 
     class Config:
         env_prefix = "APP_"
