@@ -12,7 +12,7 @@ fastapi = "^0.95.1"
 uvicorn = { extras = ["standard"], version = "^0.21.1" }
 orjson = "^3.8.10"
 pyhumps = "^3.8.0"
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.11"}
+sqlalchemy = { extras = ["asyncio"], version = "^2.0.11" }
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 passlib = { extras = ["argon2"], version = "^1.7.4" }
 pydantic = { extras = ["email"], version = "^1.10.7" }
@@ -22,6 +22,12 @@ aiofiles = "^23.1.0"
 python-multipart = "^0.0.6"
 pillow = "^9.5.0"
 pytz = "^2023.3"
+opentelemetry-api = "^1.17.0"
+opentelemetry-sdk = "^1.17.0"
+opentelemetry-exporter-otlp = "^1.17.0"
+opentelemetry-instrumentation-fastapi = "^0.38b0"
+opentelemetry-instrumentation-logging = "^0.38b0"
+prometheus-client = "^0.16.0"
 
 [tool.poetry.scripts]
 reshal-api = "reshal_api.main:run"
@@ -30,6 +36,7 @@ reshal-api = "reshal_api.main:run"
 exclude = ["venv", ".nox"]
 line-length = 120
 target-version = "py311"
+ignore = ["F401"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
