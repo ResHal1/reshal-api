@@ -141,6 +141,6 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
             ).inc()
             REQUESTS_IN_PROGRESS.labels(
                 method=method, path=path, app_name=self.app_name
-            ).inc()
+            ).dec()
 
         return response
