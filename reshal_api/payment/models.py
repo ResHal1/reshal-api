@@ -1,8 +1,9 @@
 import uuid
+from decimal import Decimal
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 
 from reshal_api.database import Base
@@ -24,4 +25,4 @@ class Payment(Base, TimestampMixin):
         ForeignKey("reservation.id", ondelete="SET NULL")
     )
     status: Mapped[PaymentStatus] = mapped_column(default=PaymentStatus.pending)
-    price: Mapped[float] = mapped_column()
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 0))
