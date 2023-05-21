@@ -7,7 +7,7 @@ from sqlalchemy.sql import insert
 from reshal_api.base import BaseCRUDService
 
 from .exceptions import InvalidAuthRequest
-from .models import User
+from .models import User, UserRole
 from .schemas import AuthRequest, UserCreate, UserUpdate
 from .security import hash_password, is_valid_password
 
@@ -59,12 +59,7 @@ class AuthService(BaseCRUDService[User, UserCreate, UserUpdate]):
 
         return user
 
-    async def create_superuser(self, session: AsyncSession, data: UserCreate) -> User:
-        data.password = hash_password(data.password)
-        user = (
-            await session.execute(
-                insert(User).values(**data.dict(), is_superuser=True).returning(User)
-            )
-        ).scalar()
+    async def create_superuser(self, session: AsyncSession, data: dict[str, Any]):
+        data["password"] = hash_password(data["password"])
+        await session.execute(insert(User).values(**data, role=UserRole.admin))
         await session.commit()
-        return user
