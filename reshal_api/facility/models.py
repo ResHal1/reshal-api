@@ -45,7 +45,7 @@ class Facility(TimestampMixin, Base):
     public: Mapped[bool] = mapped_column(default=False)
 
     owners: Mapped[list["User"]] = relationship(
-        secondary=assoc_facility_owners, back_populates="facilities", lazy="selectin"
+        secondary=assoc_facility_owners, lazy="selectin"
     )
     images: Mapped[list[FacilityImage]] = relationship(lazy="selectin")
 
