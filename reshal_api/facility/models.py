@@ -1,7 +1,8 @@
 import uuid
+from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Column, ForeignKey, Table
+from sqlalchemy import Column, ForeignKey, Numeric, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from reshal_api.database import Base
@@ -38,9 +39,8 @@ class Facility(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column()
     description: Mapped[Optional[str]] = mapped_column()
-    location: Mapped[
-        str
-    ] = mapped_column()  # latitude and longitude separated by a comma
+    lat: Mapped[Decimal] = mapped_column(Numeric(10, 8))
+    lon: Mapped[Decimal] = mapped_column(Numeric(11, 8))
     address: Mapped[str] = mapped_column()
     public: Mapped[bool] = mapped_column(default=False)
 
