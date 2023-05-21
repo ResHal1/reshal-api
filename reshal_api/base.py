@@ -7,10 +7,16 @@ from typing import Any, Generic, Optional, Sequence, TypeVar
 
 import humps
 import orjson
+from fastapi import Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
+
+
+def DatetimeQuery(description: str = "Datetime in `ISO 8601` format"):
+    return Query(description=description)
+
 
 # ORJSONBaseModel
 

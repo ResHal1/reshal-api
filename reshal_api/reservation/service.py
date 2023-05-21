@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,3 +32,22 @@ class ReservationService(
         )
         result = (await session.execute(q)).scalar_one_or_none()
         return bool(result)
+
+    async def get_all_in_timeframe(
+        self,
+        session: AsyncSession,
+        start_time: datetime,
+        end_time: datetime,
+        *args,
+        **kwargs
+    ) -> Sequence[Reservation]:
+        q = (
+            select(Reservation)
+            .filter(Reservation.start_time >= start_time)
+            .filter(Reservation.end_time <= end_time)
+        )
+
+        reservations = (
+            (await session.execute(q.filter(*args).filter_by(**kwargs))).scalars().all()
+        )
+        return reservations
