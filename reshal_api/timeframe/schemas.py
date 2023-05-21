@@ -1,7 +1,8 @@
 import uuid
+from decimal import Decimal
 from typing import Optional
 
-from pydantic import validator
+from pydantic import Field, validator
 
 from reshal_api.base import ORJSONBaseModel
 from reshal_api.facility.schemas import FacilityReadBase
@@ -26,8 +27,8 @@ def price_more_than_0(v: float) -> float:
 
 class TimeFrameBase(ORJSONBaseModel):
     facility_id: uuid.UUID
-    duration: int
-    price: float
+    duration: int = Field(description="Time in seconds")
+    price: Decimal
 
 
 class TimeFrameReadBase(TimeFrameBase):
@@ -55,7 +56,7 @@ class TimeFrameCreate(TimeFrameBase):
 
 
 class TimeFrameUpdate(ORJSONBaseModel):
-    duration: Optional[int]
+    duration: Optional[int] = Field(None, description="Time in seconds")
     price: Optional[float]
 
     _validate_duration = validator("duration", allow_reuse=True)(

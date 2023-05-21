@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 from typing import Optional
 
 from reshal_api.base import ORJSONBaseModel
@@ -8,7 +9,7 @@ from .models import PaymentStatus
 
 class PaymentBase(ORJSONBaseModel):
     reservation_id: Optional[uuid.UUID]
-    price: float
+    price: Decimal
 
 
 class PaymentRead(PaymentBase):
