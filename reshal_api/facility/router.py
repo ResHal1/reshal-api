@@ -28,6 +28,7 @@ from .schemas import (
     FacilityImageRead,
     FacilityOwnership,
     FacilityRead,
+    FacilityReadAdmin,
     FacilityUpdate,
 )
 from .service import FacilityImageService, FacilityService
@@ -35,8 +36,20 @@ from .service import FacilityImageService, FacilityService
 router = APIRouter(tags=["facility"])
 
 
-@router.get("/", response_model=list[FacilityRead], dependencies=[Depends(get_admin)])
+@router.get("/", response_model=list[FacilityRead])
 async def get_facilities(
+    session: AsyncSession = Depends(get_db_session),
+    facility_service: FacilityService = Depends(get_facility_service),
+):
+    facilities = await facility_service.get_all(session)
+    return facilities
+
+
+# TODO: change name
+@router.get(
+    "/admin", response_model=list[FacilityReadAdmin], dependencies=[Depends(get_admin)]
+)
+async def get_facilities_admin(
     session: AsyncSession = Depends(get_db_session),
     facility_service: FacilityService = Depends(get_facility_service),
 ):

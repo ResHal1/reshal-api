@@ -64,8 +64,11 @@ class FacilityReadBase(FacilityBase):
 
 
 class FacilityRead(FacilityReadBase):
-    owners: list[UserRead]
     images: list[FacilityImageRead]
+
+
+class FacilityReadAdmin(FacilityRead):
+    owners: list[UserRead]
 
 
 class FacilityCreate(FacilityBase):
