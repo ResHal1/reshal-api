@@ -1,10 +1,12 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.auth.dependencies import get_admin, get_user
 from reshal_api.auth.models import User, UserRole
+from reshal_api.base import DatetimeQuery
 from reshal_api.database import get_db_session
 from reshal_api.exceptions import Conflict, Forbidden, NotFound
 from reshal_api.payment.dependencies import get_payment_service
@@ -20,18 +22,34 @@ from .service import ReservationService
 
 router = APIRouter(tags=["reservation"])
 
-# TODO: public reservations endpoint
-
 
 @router.get(
     "/", response_model=list[ReservationReadBase], dependencies=[Depends(get_admin)]
 )
 async def get_all_reservations(
+    startTime: Annotated[datetime, DatetimeQuery()] = datetime.now(),
+    endTime: Annotated[datetime, DatetimeQuery()] = datetime.now() + timedelta(weeks=4),
     session: AsyncSession = Depends(get_db_session),
     reservation_service: ReservationService = Depends(get_reservation_service),
 ):
-    reservations = await reservation_service.get_all(session)
+    reservations = await reservation_service.get_all_in_timeframe(
+        session, startTime, endTime
+    )
     return reservations
+
+
+@router.get("/me", response_model=list[ReservationReadBase])
+async def get_reservations_me(
+    startTime: Annotated[datetime, DatetimeQuery()] = datetime.now(),
+    endTime: Annotated[datetime, DatetimeQuery()] = datetime.now() + timedelta(weeks=4),
+    session: AsyncSession = Depends(get_db_session),
+    user: User = Depends(get_user),
+    reservation_service: ReservationService = Depends(get_reservation_service),
+):
+    user_reservations = await reservation_service.get_all_in_timeframe(
+        session, startTime, endTime, user_id=user.id
+    )
+    return user_reservations
 
 
 @router.post("/")
