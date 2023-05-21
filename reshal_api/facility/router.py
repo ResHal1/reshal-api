@@ -154,7 +154,9 @@ async def add_facility_images(
 
 
 @router.delete(
-    "/{facility_id}/images/{facility_image_id}", status_code=status.HTTP_204_NO_CONTENT
+    "/{facility_id}/images/{facility_image_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_owner)],
 )
 async def delete_facility_image(
     facility_id: str,
