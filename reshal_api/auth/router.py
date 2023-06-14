@@ -9,7 +9,8 @@ from .dependencies import get_admin, get_auth_service, get_user
 from .exceptions import EmailAlreadyExists
 from .jwt import create_access_token
 from .models import User
-from .schemas import AccessTokenResponse, AuthRequest, UserCreate, UserRead, UserUpdate
+from .schemas import (AccessTokenResponse, AuthRequest, UserCreate, UserRead,
+                      UserUpdate)
 from .service import AuthService
 
 config = get_config()
@@ -54,7 +55,7 @@ async def update_me(
     if not (await auth_service.is_password_valid(user, data.current_password)):
         raise exceptions.Forbidden("Invalid password")
 
-    if data.email:
+    if data.email and data.email != user.email:
         email_exists = bool(await auth_service.get_by_email(session, data.email))
         if email_exists:
             raise EmailAlreadyExists()
