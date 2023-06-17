@@ -9,8 +9,7 @@ from .dependencies import get_admin, get_auth_service, get_user
 from .exceptions import EmailAlreadyExists
 from .jwt import create_access_token
 from .models import User
-from .schemas import (AccessTokenResponse, AuthRequest, UserCreate, UserRead,
-                      UserUpdate)
+from .schemas import AccessTokenResponse, AuthRequest, UserCreate, UserRead, UserUpdate
 from .service import AuthService
 
 config = get_config()
@@ -78,6 +77,7 @@ async def auth_user(
         config.ACCESS_TOKEN_COOKIE_NAME,
         f"Bearer {access_token}",
         max_age=config.ACCESS_TOKEN_EXPIRE * 60,
+        samesite="none",
         httponly=True,
         secure=config.ENVIRONMENT.is_production,
     )
@@ -89,6 +89,11 @@ async def auth_user(
     "/logout", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(get_user)]
 )
 async def logout(response: Response):
-    response.delete_cookie(config.ACCESS_TOKEN_COOKIE_NAME)
+    response.delete_cookie(
+        config.ACCESS_TOKEN_COOKIE_NAME,
+        httponly=True,
+        samesite="none",
+        secure=config.ENVIRONMENT.is_production,
+    )
     response.status_code = status.HTTP_204_NO_CONTENT
     return response
