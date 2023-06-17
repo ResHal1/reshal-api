@@ -12,7 +12,7 @@ from reshal_api.auth.dependencies import (
 from reshal_api.auth.models import User, UserRole
 from reshal_api.auth.service import AuthService
 from reshal_api.database import get_db_session
-from reshal_api.exceptions import Conflict, Forbidden, NotFound
+from reshal_api.exceptions import BadRequest, Conflict, Forbidden, NotFound
 from reshal_api.reservation.schemas import ReservationReadBase
 
 from .dependencies import (
@@ -20,6 +20,7 @@ from .dependencies import (
     facility_image_exists,
     get_facility_image_service,
     get_facility_service,
+    get_facility_type_service,
 )
 from .models import Facility, FacilityImage
 from .schemas import (
@@ -29,9 +30,11 @@ from .schemas import (
     FacilityOwnership,
     FacilityRead,
     FacilityReadAdmin,
+    FacilityTypeCreate,
+    FacilityTypeRead,
     FacilityUpdate,
 )
-from .service import FacilityImageService, FacilityService
+from .service import FacilityImageService, FacilityService, FacilityTypeService
 
 router = APIRouter(tags=["facility"])
 
@@ -43,6 +46,45 @@ async def get_facilities(
 ):
     facilities = await facility_service.get_all(session)
     return facilities
+
+
+@router.get("/types", response_model=list[FacilityTypeRead], tags=["facility-type"])
+async def get_facility_roles(
+    session: AsyncSession = Depends(get_db_session),
+    types_service: FacilityTypeService = Depends(get_facility_type_service),
+):
+    types = await types_service.get_all(session)
+    return types
+
+
+@router.post(
+    "/types",
+    response_model=FacilityTypeRead,
+    tags=["facility-type"],
+    dependencies=[Depends(get_admin)],
+)
+async def create_facility_type(
+    data: FacilityTypeCreate,
+    session: AsyncSession = Depends(get_db_session),
+    types_service: FacilityTypeService = Depends(get_facility_type_service),
+):
+    if await types_service.type_name_exists(session, data.name):
+        raise Conflict(detail=f"Facility type {data.name!r} already exists")
+
+    facility_type = await types_service.create(session, data)
+    return facility_type
+
+
+@router.delete(
+    "/types/{type_id}", tags=["facility-type"], dependencies=[Depends(get_admin)]
+)
+async def delete_facility_type(
+    type_id: str,
+    session: AsyncSession = Depends(get_db_session),
+    types_service: FacilityTypeService = Depends(get_facility_type_service),
+):
+    await types_service.delete(session, id=type_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # TODO: change name
@@ -188,9 +230,13 @@ async def create_facility(
     data: FacilityCreate,
     session: AsyncSession = Depends(get_db_session),
     facility_service: FacilityService = Depends(get_facility_service),
+    types_service: FacilityTypeService = Depends(get_facility_type_service),
 ):
+    if not bool(await types_service.get(session, id=data.type_id)):
+        raise BadRequest(detail="Facility type not found")
+
     facility = await facility_service.create(session, data)
-    await session.refresh(facility, ["owners", "images"])
+    await session.refresh(facility, ["owners", "images", "type"])
     return facility
 
 
@@ -200,8 +246,11 @@ async def update_facility(
     session: AsyncSession = Depends(get_db_session),
     facility_service: FacilityService = Depends(get_facility_service),
     facility: Facility = Depends(facility_exists),
+    types_service: FacilityTypeService = Depends(get_facility_type_service),
     user: User = Depends(get_user),
 ):
+    if not bool(await types_service.get(session, id=data.type_id)):
+        raise BadRequest(detail="Facility type not found")
     """multipart/form-data"""
     if user.role != UserRole.admin and not facility.is_owner(user.id):
         raise Forbidden()

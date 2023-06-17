@@ -1,21 +1,26 @@
 import uuid
+from logging import getLogger
 from typing import Any, Sequence
 
 from fastapi import UploadFile
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.auth.models import User
 from reshal_api.base import BaseCRUDService
 
 from .file_manager import LocalFileManager
-from .models import Facility, FacilityImage
+from .models import Facility, FacilityImage, FacilityType
 from .schemas import (
     FacilityCreate,
     FacilityImageCreate,
     FacilityImageUpdate,
+    FacilityTypeCreate,
+    FacilityTypeUpdate,
     FacilityUpdate,
 )
+
+logger = getLogger(__name__)
 
 
 class FacilityService(BaseCRUDService[Facility, FacilityCreate, FacilityUpdate]):
@@ -27,6 +32,14 @@ class FacilityService(BaseCRUDService[Facility, FacilityCreate, FacilityUpdate])
     ) -> Sequence[Facility]:
         q = select(Facility).join(Facility.owners).where(User.id == owner_id)
         facilities = (await session.scalars(q)).all()
+        return facilities
+
+    async def get_facilities_by_type(
+        self, session: AsyncSession, type_id: uuid.UUID
+    ) -> Sequence[Facility]:
+        facilities = (
+            await session.scalars(select(Facility).where(Facility.type_id == type_id))
+        ).all()
         return facilities
 
 
@@ -87,3 +100,17 @@ class FacilityImageService(
         **kwargs,
     ) -> None:
         raise NotImplementedError("FacilityImage cannot be updated")
+
+
+class FacilityTypeService(
+    BaseCRUDService[FacilityType, FacilityTypeCreate, FacilityTypeUpdate]
+):
+    def __init__(self) -> None:
+        super().__init__(FacilityType)
+
+    async def type_name_exists(self, session: AsyncSession, name: str) -> bool:
+        # FIXME: why this is "bool | None"
+        type_exists = (
+            await session.execute(select(exists().where(FacilityType.name == name)))
+        ).scalar()
+        return bool(type_exists)

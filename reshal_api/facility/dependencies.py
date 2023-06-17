@@ -4,7 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from reshal_api.database import get_db_session
 from reshal_api.exceptions import NotFound
 
-from .service import FacilityImageService, FacilityService
+from .service import FacilityImageService, FacilityService, FacilityTypeService
+
+
+async def get_facility_type_service() -> FacilityTypeService:
+    return FacilityTypeService()
 
 
 async def get_facility_image_service() -> FacilityImageService:
