@@ -29,6 +29,28 @@ class FacilityImageUpdate(FacilityImageBase):
     ...
 
 
+# Facility Role
+
+
+class FacilityTypeBase(ORJSONBaseModel):
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
+class FacilityTypeRead(FacilityTypeBase):
+    id: uuid.UUID
+
+
+class FacilityTypeCreate(FacilityTypeBase):
+    ...
+
+
+class FacilityTypeUpdate(FacilityTypeBase):
+    ...
+
+
 # Facility
 
 
@@ -50,7 +72,6 @@ class FacilityBase(ORJSONBaseModel):
     lat: float
     lon: float
     address: str
-    public: bool
 
     class Config:
         orm_mode = True
@@ -65,14 +86,16 @@ class FacilityReadBase(FacilityBase):
 
 class FacilityRead(FacilityReadBase):
     images: list[FacilityImageRead]
+    type: FacilityTypeRead
 
 
 class FacilityReadAdmin(FacilityRead):
+    type_id: uuid.UUID
     owners: list[UserRead]
 
 
 class FacilityCreate(FacilityBase):
-    ...
+    type_id: uuid.UUID
 
 
 class FacilityUpdate(FacilityBase):
@@ -81,7 +104,7 @@ class FacilityUpdate(FacilityBase):
     lat: Optional[float]
     lon: Optional[float]
     address: Optional[str]
-    public: Optional[bool]
+    type_id: Optional[uuid.UUID]
 
     _validate_lat = validator("lat", allow_reuse=True)(validate_lat)
     _validate_lon = validator("lon", allow_reuse=True)(validate_lon)
