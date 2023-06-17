@@ -2,7 +2,7 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Column, ForeignKey, Numeric, Table
+from sqlalchemy import Column, ForeignKey, Numeric, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from reshal_api.database import Base
@@ -33,6 +33,14 @@ assoc_facility_owners = Table(
 )
 
 
+class FacilityType(Base, TimestampMixin):
+    __tablename__ = "facility_type"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(length=80))
+
+    facilities: Mapped["Facility"] = relationship(back_populates="type", lazy="raise")
+
+
 class Facility(TimestampMixin, Base):
     __tablename__ = "facility"
 
@@ -42,8 +50,13 @@ class Facility(TimestampMixin, Base):
     lat: Mapped[Decimal] = mapped_column(Numeric(10, 8))
     lon: Mapped[Decimal] = mapped_column(Numeric(11, 8))
     address: Mapped[str] = mapped_column()
-    public: Mapped[bool] = mapped_column(default=False)
+    type_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("facility_type.id", ondelete="RESTRICT")
+    )
 
+    type: Mapped[FacilityType] = relationship(
+        back_populates="facilities", lazy="selectin"
+    )
     owners: Mapped[list["User"]] = relationship(
         secondary=assoc_facility_owners, lazy="selectin"
     )
