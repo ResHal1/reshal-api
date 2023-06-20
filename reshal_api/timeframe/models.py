@@ -22,6 +22,6 @@ class TimeFrame(Base, TimestampMixin):
     duration: Mapped[int] = mapped_column()
     price: Mapped[Decimal] = mapped_column(Numeric(12, 0))
 
-    facility: Mapped["Facility"] = relationship(
-        back_populates="timeframes", lazy="raise"
-    )
+    # facility: Mapped["Facility"] = relationship(
+    #     back_populates="timeframes", lazy="raise"
+    # )

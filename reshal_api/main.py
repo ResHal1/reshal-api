@@ -33,7 +33,7 @@ app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
 app.include_router(auth_router, prefix="/auth")
 app.include_router(facility_router, prefix="/facilities")
 app.include_router(reservation_router, prefix="/reservations")
-app.include_router(timeframe_router, prefix="/timeframes")
+# app.include_router(timeframe_router, prefix="/timeframes")
 app.include_router(payment_router, prefix="/payments")
 
 

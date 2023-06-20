@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 from typing import Optional
 
 from pydantic import AnyHttpUrl, validator
@@ -72,6 +73,7 @@ class FacilityBase(ORJSONBaseModel):
     lat: float
     lon: float
     address: str
+    price: Decimal
     image_url: AnyHttpUrl
 
     class Config:
@@ -104,6 +106,7 @@ class FacilityUpdate(FacilityBase):
     lat: Optional[float]
     lon: Optional[float]
     address: Optional[str]
+    price: Optional[Decimal]
     image_url: Optional[AnyHttpUrl]
     type_id: Optional[uuid.UUID]
 
