@@ -1,6 +1,4 @@
-import uuid
-
-from fastapi import APIRouter, BackgroundTasks, Depends, Response, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.auth.dependencies import (
@@ -17,7 +15,6 @@ from reshal_api.reservation.schemas import ReservationReadBase
 
 from .dependencies import (
     facility_exists,
-    facility_image_exists,
     get_facility_image_service,
     get_facility_service,
     get_facility_type_service,
@@ -25,8 +22,6 @@ from .dependencies import (
 from .models import Facility, FacilityImage
 from .schemas import (
     FacilityCreate,
-    FacilityImageCreate,
-    FacilityImageRead,
     FacilityOwnership,
     FacilityRead,
     FacilityReadAdmin,
@@ -49,7 +44,7 @@ async def get_facilities(
 
 
 @router.get("/types", response_model=list[FacilityTypeRead], tags=["facility-type"])
-async def get_facility_roles(
+async def get_facility_types(
     session: AsyncSession = Depends(get_db_session),
     types_service: FacilityTypeService = Depends(get_facility_type_service),
 ):
@@ -152,15 +147,15 @@ async def revoke_facility_ownership(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.get("/{facility_id}/images", response_model=list[FacilityImageRead])
-async def get_facility_images(
-    facility_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    facility: Facility = Depends(facility_exists),
-    facility_image_service: FacilityImageService = Depends(get_facility_image_service),
-):
-    images = await facility_image_service.get_all(session, facility_id=facility_id)
-    return images
+# @router.get("/{facility_id}/images", response_model=list[FacilityImageRead])
+# async def get_facility_images(
+#     facility_id: str,
+#     session: AsyncSession = Depends(get_db_session),
+#     facility: Facility = Depends(facility_exists),
+#     facility_image_service: FacilityImageService = Depends(get_facility_image_service),
+# ):
+#     images = await facility_image_service.get_all(session, facility_id=facility_id)
+#     return images
 
 
 @router.get("/{facility_id}/reservations", response_model=list[ReservationReadBase])
@@ -173,45 +168,45 @@ async def get_reservations_for_facility(
     return facility.reservations
 
 
-@router.post(
-    "/{facility_id}/images",
-    status_code=status.HTTP_201_CREATED,
-    response_model=list[FacilityImageRead],
-)
-async def add_facility_images(
-    facility_id: str,
-    images: list[UploadFile],
-    session: AsyncSession = Depends(get_db_session),
-    facility: Facility = Depends(facility_exists),
-    facility_image_service: FacilityImageService = Depends(get_facility_image_service),
-):
-    db_imgs = []
-    for image in images:
-        facility_image = await facility_image_service.create(
-            session, FacilityImageCreate(facility_id=uuid.UUID(facility_id)), image
-        )
-        db_imgs.append(facility_image)
+# @router.post(
+#     "/{facility_id}/images",
+#     status_code=status.HTTP_201_CREATED,
+#     response_model=list[FacilityImageRead],
+# )
+# async def add_facility_images(
+#     facility_id: str,
+#     images: list[UploadFile],
+#     session: AsyncSession = Depends(get_db_session),
+#     facility: Facility = Depends(facility_exists),
+#     facility_image_service: FacilityImageService = Depends(get_facility_image_service),
+# ):
+#     db_imgs = []
+#     for image in images:
+#         facility_image = await facility_image_service.create(
+#             session, FacilityImageCreate(facility_id=uuid.UUID(facility_id)), image
+#         )
+#         db_imgs.append(facility_image)
 
-    return db_imgs
+#     return db_imgs
 
 
-@router.delete(
-    "/{facility_id}/images/{facility_image_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(get_owner)],
-)
-async def delete_facility_image(
-    facility_id: str,
-    facility_image_id: str,
-    session: AsyncSession = Depends(get_db_session),
-    facility: Facility = Depends(facility_exists),
-    facility_image: FacilityImage = Depends(facility_image_exists),
-    facility_image_service: FacilityImageService = Depends(get_facility_image_service),
-):
-    await facility_image_service.delete(
-        session, db_obj=facility_image, image_path=facility_image.path
-    )
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+# @router.delete(
+#     "/{facility_id}/images/{facility_image_id}",
+#     status_code=status.HTTP_204_NO_CONTENT,
+#     dependencies=[Depends(get_owner)],
+# )
+# async def delete_facility_image(
+#     facility_id: str,
+#     facility_image_id: str,
+#     session: AsyncSession = Depends(get_db_session),
+#     facility: Facility = Depends(facility_exists),
+#     facility_image: FacilityImage = Depends(facility_image_exists),
+#     facility_image_service: FacilityImageService = Depends(get_facility_image_service),
+# ):
+#     await facility_image_service.delete(
+#         session, db_obj=facility_image, image_path=facility_image.path
+#     )
+#     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{facility_id}", response_model=FacilityRead)
@@ -236,7 +231,7 @@ async def create_facility(
         raise BadRequest(detail="Facility type not found")
 
     facility = await facility_service.create(session, data)
-    await session.refresh(facility, ["owners", "images", "type"])
+    await session.refresh(facility, ["owners", "type"])
     return facility
 
 
@@ -249,7 +244,7 @@ async def update_facility(
     types_service: FacilityTypeService = Depends(get_facility_type_service),
     user: User = Depends(get_user),
 ):
-    if not bool(await types_service.get(session, id=data.type_id)):
+    if data.type_id and not bool(await types_service.get(session, id=data.type_id)):
         raise BadRequest(detail="Facility type not found")
     """multipart/form-data"""
     if user.role != UserRole.admin and not facility.is_owner(user.id):

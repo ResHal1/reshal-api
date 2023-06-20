@@ -49,6 +49,7 @@ class Facility(TimestampMixin, Base):
     description: Mapped[Optional[str]] = mapped_column()
     lat: Mapped[Decimal] = mapped_column(Numeric(10, 8))
     lon: Mapped[Decimal] = mapped_column(Numeric(11, 8))
+    image_url: Mapped[str] = mapped_column()
     address: Mapped[str] = mapped_column()
     type_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("facility_type.id", ondelete="RESTRICT")
@@ -60,7 +61,7 @@ class Facility(TimestampMixin, Base):
     owners: Mapped[list["User"]] = relationship(
         secondary=assoc_facility_owners, lazy="selectin"
     )
-    images: Mapped[list[FacilityImage]] = relationship(lazy="selectin")
+    # images: Mapped[list[FacilityImage]] = relationship(lazy="selectin")
 
     timeframes: Mapped[list["TimeFrame"]] = relationship(
         back_populates="facility", lazy="raise"
