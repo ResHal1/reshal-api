@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from pydantic import validator
+from pydantic import AnyHttpUrl, validator
 
 from reshal_api.auth.schemas import UserRead
 from reshal_api.base import ORJSONBaseModel
@@ -72,6 +72,7 @@ class FacilityBase(ORJSONBaseModel):
     lat: float
     lon: float
     address: str
+    image_url: AnyHttpUrl
 
     class Config:
         orm_mode = True
@@ -85,7 +86,6 @@ class FacilityReadBase(FacilityBase):
 
 
 class FacilityRead(FacilityReadBase):
-    images: list[FacilityImageRead]
     type: FacilityTypeRead
 
 
@@ -104,6 +104,7 @@ class FacilityUpdate(FacilityBase):
     lat: Optional[float]
     lon: Optional[float]
     address: Optional[str]
+    image_url: Optional[AnyHttpUrl]
     type_id: Optional[uuid.UUID]
 
     _validate_lat = validator("lat", allow_reuse=True)(validate_lat)
