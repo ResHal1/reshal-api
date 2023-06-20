@@ -11,7 +11,8 @@ from reshal_api.mixins import TimestampMixin
 if TYPE_CHECKING:
     from reshal_api.auth.models import User
     from reshal_api.reservation.models import Reservation
-    from reshal_api.timeframe.models import TimeFrame
+
+    # from reshal_api.timeframe.models import TimeFrame
 
 
 class FacilityImage(Base, TimestampMixin):
@@ -50,6 +51,7 @@ class Facility(TimestampMixin, Base):
     lat: Mapped[Decimal] = mapped_column(Numeric(10, 8))
     lon: Mapped[Decimal] = mapped_column(Numeric(11, 8))
     image_url: Mapped[str] = mapped_column()
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 0))
     address: Mapped[str] = mapped_column()
     type_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("facility_type.id", ondelete="RESTRICT")
@@ -63,9 +65,9 @@ class Facility(TimestampMixin, Base):
     )
     # images: Mapped[list[FacilityImage]] = relationship(lazy="selectin")
 
-    timeframes: Mapped[list["TimeFrame"]] = relationship(
-        back_populates="facility", lazy="raise"
-    )
+    # timeframes: Mapped[list["TimeFrame"]] = relationship(
+    #     back_populates="facility", lazy="raise"
+    # )
     reservations: Mapped[list["Reservation"]] = relationship(
         back_populates="facility", lazy="raise"
     )
