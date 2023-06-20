@@ -9,6 +9,8 @@ from reshal_api.auth.models import User, UserRole
 from reshal_api.base import DatetimeQuery
 from reshal_api.database import get_db_session
 from reshal_api.exceptions import Conflict, Forbidden, NotFound
+from reshal_api.facility.dependencies import get_facility_service
+from reshal_api.facility.service import FacilityService
 from reshal_api.payment.dependencies import get_payment_service
 from reshal_api.payment.schemas import PaymentCreate
 from reshal_api.payment.service import PaymentService
@@ -57,17 +59,24 @@ async def create_reservation(
     data: ReservationCreateBase,
     session: AsyncSession = Depends(get_db_session),
     reservation_service: ReservationService = Depends(get_reservation_service),
-    timeframe_service: TimeFrameService = Depends(get_timeframe_service),
+    facility_service: FacilityService = Depends(get_facility_service),
+    # timeframe_service: TimeFrameService = Depends(get_timeframe_service),
     payment_service: PaymentService = Depends(get_payment_service),
     user: User = Depends(get_user),
 ):
-    timeframe = await timeframe_service.get(
-        session, id=data.timeframe_id, facility_id=data.facility_id
-    )
-    if timeframe is None:
-        raise NotFound("Timeframe not found")
+    # timeframe = await timeframe_service.get(
+    #     session, id=data.timeframe_id, facility_id=data.facility_id
+    # )
+    # if timeframe is None:
+    #     raise NotFound("Timeframe not found")
 
-    end_time = data.start_time + timedelta(seconds=timeframe.duration)
+    # end_time = data.start_time + timedelta(seconds=timeframe.duration)
+    end_time = data.start_time + timedelta(hours=1)
+
+    facility = await facility_service.get(session, id=data.facility_id)
+
+    if facility is None:
+        raise NotFound()
 
     if await reservation_service.is_overlapping(
         session, data.facility_id, data.start_time, end_time
@@ -75,12 +84,16 @@ async def create_reservation(
         raise Conflict("Reservation overlaps with another reservation")
 
     payment = await payment_service.create_payment(
-        session, create_obj=PaymentCreate(reservation_id=None, price=timeframe.price)
+        session, create_obj=PaymentCreate(reservation_id=None, price=facility.price)
     )
     await session.flush()
 
     create_obj = ReservationCreate(
-        **data.dict(), payment_id=payment.id, user_id=user.id, end_time=end_time
+        **data.dict(),
+        price=facility.price,
+        payment_id=payment.id,
+        user_id=user.id,
+        end_time=end_time
     )
     reservation = await reservation_service.create(session, create_obj)
     payment.reservation_id = reservation.id

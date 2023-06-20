@@ -1,19 +1,21 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 import pytz
 from pydantic import root_validator, validator
 
 from reshal_api.base import ORJSONBaseModel
 from reshal_api.payment.schemas import PaymentRead
-from reshal_api.timeframe.schemas import TimeFrameRead
+
+# from reshal_api.timeframe.schemas import TimeFrameRead
 
 # Reservation
 
 
 class ReservationCreateBase(ORJSONBaseModel):
     facility_id: uuid.UUID
-    timeframe_id: uuid.UUID
+    # timeframe_id: uuid.UUID
     start_time: datetime
 
     @validator("start_time")
@@ -28,6 +30,7 @@ class ReservationCreateBase(ORJSONBaseModel):
 
 
 class ReservationCreate(ReservationCreateBase):
+    price: Decimal
     payment_id: uuid.UUID
     user_id: uuid.UUID
     end_time: datetime
@@ -49,7 +52,8 @@ class ReservationCreate(ReservationCreateBase):
 class ReservationReadBase(ORJSONBaseModel):
     id: uuid.UUID
     facility_id: uuid.UUID
-    timeframe_id: uuid.UUID
+    price: Decimal
+    # timeframe_id: uuid.UUID
     user_id: uuid.UUID
     start_time: datetime
     end_time: datetime
@@ -61,7 +65,7 @@ class ReservationReadBase(ORJSONBaseModel):
 class ReservationRead(ReservationReadBase):
     payment_id: uuid.UUID
 
-    timeframe: TimeFrameRead
+    # timeframe: TimeFrameRead
     payment: PaymentRead
 
     class Config:
