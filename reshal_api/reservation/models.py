@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from reshal_api.database import Base
@@ -22,9 +23,10 @@ class Reservation(Base, TimestampMixin):
     facility_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("facility.id", ondelete="SET NULL"),
     )
-    timeframe_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("timeframe.id", ondelete="SET NULL")
-    )
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 0))
+    # timeframe_id: Mapped[uuid.UUID] = mapped_column(
+    #     ForeignKey("timeframe.id", ondelete="SET NULL")
+    # )
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL")
     )
