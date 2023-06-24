@@ -1,11 +1,22 @@
+from typing import NamedTuple
+
 import pkg_resources
 from alembic import command as alembic_command
 from alembic.config import Config as AlembicConfig
+from httpx import AsyncClient
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.sql import text
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy_utils.functions.database import _set_url_database, make_url
+
+from reshal_api.auth.models import User
+
+
+class AuthClientFixture(NamedTuple):
+    client: AsyncClient
+    user: User
+
 
 alembic_config = AlembicConfig(
     pkg_resources.resource_filename("reshal_api", "alembic.ini")
