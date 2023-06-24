@@ -47,7 +47,7 @@ async def engine(pytestconfig):
 
     yield test_engine
 
-    # await drop_database(db_config.url)
+    await drop_database(db_config.url)
     await test_engine.dispose()
 
 
