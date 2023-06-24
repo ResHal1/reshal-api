@@ -17,7 +17,7 @@ router = APIRouter(tags=["timeframe"])
 
 
 @router.get(
-    "/", response_model=list[TimeFrameReadBase], dependencies=[Depends(get_admin)]
+    "", response_model=list[TimeFrameReadBase], dependencies=[Depends(get_admin)]
 )
 async def get_timeframes(
     session: AsyncSession = Depends(get_db_session),
@@ -37,7 +37,7 @@ async def get_timeframes_for_facility(
     return await timeframe_service.get_all(session, facility_id=facility_id)
 
 
-@router.post("/", response_model=TimeFrameReadBase)
+@router.post("", response_model=TimeFrameReadBase)
 async def create_timeframe(
     data: TimeFrameCreate,
     session: AsyncSession = Depends(get_db_session),

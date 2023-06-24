@@ -34,7 +34,7 @@ from .service import FacilityImageService, FacilityService, FacilityTypeService
 router = APIRouter(tags=["facility"])
 
 
-@router.get("/", response_model=list[FacilityRead])
+@router.get("", response_model=list[FacilityRead])
 async def get_facilities(
     session: AsyncSession = Depends(get_db_session),
     facility_service: FacilityService = Depends(get_facility_service),
@@ -220,7 +220,7 @@ async def get_facility_by_id(
     return facility
 
 
-@router.post("/", response_model=FacilityRead, dependencies=[Depends(get_admin)])
+@router.post("", response_model=FacilityRead, dependencies=[Depends(get_admin)])
 async def create_facility(
     data: FacilityCreate,
     session: AsyncSession = Depends(get_db_session),
