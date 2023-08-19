@@ -26,9 +26,9 @@ app = FastAPI(
     openapi_url=None if config.ENVIRONMENT.is_production else "/openapi.json",
 )
 
+app.add_middleware(PrometheusMiddleware, app_name=config.OTLP_APP_NAME)
 setup_otlp(app, config.OTLP_APP_NAME, config.OTLP_GRPC_ENDPOINT)
 app.add_middleware(CORSMiddleware, **CORSSettings().dict())
-app.add_middleware(PrometheusMiddleware, app_name=config.OTLP_APP_NAME)
 app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
 app.include_router(auth_router, prefix="/auth")
 app.include_router(facility_router, prefix="/facilities")
