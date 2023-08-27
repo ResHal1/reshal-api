@@ -54,6 +54,7 @@ async def get_facility_types(
 
 @router.post(
     "/types",
+    status_code=status.HTTP_201_CREATED,
     response_model=FacilityTypeRead,
     tags=["facility-type"],
     dependencies=[Depends(get_admin)],
@@ -105,7 +106,9 @@ async def get_facilities_me(
 
 
 @router.post(
-    "/assign-ownership", response_model=FacilityRead, dependencies=[Depends(get_admin)]
+    "/assign-ownership",
+    response_model=FacilityReadAdmin,
+    dependencies=[Depends(get_admin)],
 )
 async def assign_facility_ownership(
     data: FacilityOwnership,
@@ -121,7 +124,9 @@ async def assign_facility_ownership(
     if facility.is_owner(user.id):
         raise Conflict(detail="User already has ownership")
 
-    facility.owners.append(user)
+    await facility_service.add_owner(session, facility, user)
+    await session.refresh(user)
+    await session.refresh(facility, ["owners"])
 
     return facility
 
@@ -141,10 +146,11 @@ async def revoke_facility_ownership(
     if facility is None or user is None:
         raise NotFound()
 
-    if facility.is_owner(user.id):
-        facility.owners.remove(user)
+    if not facility.is_owner(user.id):
+        raise BadRequest(detail="User is not an owner of this facility")
+    await facility_service.remove_owner(session, facility, user)
 
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_200_OK)
 
 
 # @router.get("/{facility_id}/images", response_model=list[FacilityImageRead])
@@ -158,7 +164,7 @@ async def revoke_facility_ownership(
 #     return images
 
 
-@router.get("/{facility_id}/reservations", response_model=list[ReservationReadBase])
+@router.get("/{facility_id}/reservations")
 async def get_reservations_for_facility(
     facility_id: str,
     session: AsyncSession = Depends(get_db_session),
@@ -220,7 +226,12 @@ async def get_facility_by_id(
     return facility
 
 
-@router.post("", response_model=FacilityRead, dependencies=[Depends(get_admin)])
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    response_model=FacilityRead,
+    dependencies=[Depends(get_admin)],
+)
 async def create_facility(
     data: FacilityCreate,
     session: AsyncSession = Depends(get_db_session),

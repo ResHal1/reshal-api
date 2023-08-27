@@ -29,7 +29,7 @@ async def get_user(
 
 async def get_owner(user: User = Depends(get_user)) -> User:
     if user.role not in (UserRole.owner, UserRole.admin):
-        raise UserRoleNotSufficient()
+        raise UserRoleNotSufficient("Not an owner")
     return user
 
 

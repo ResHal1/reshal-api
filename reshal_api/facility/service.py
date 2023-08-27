@@ -3,14 +3,16 @@ from logging import getLogger
 from typing import Any, Sequence
 
 from fastapi import UploadFile
-from sqlalchemy import exists, select
+from sqlalchemy import delete, exists
+from sqlalchemy import func as sqla_func
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from reshal_api.auth.models import User
+from reshal_api.auth.models import User, UserRole
 from reshal_api.base import BaseCRUDService
 
 from .file_manager import LocalFileManager
-from .models import Facility, FacilityImage, FacilityType
+from .models import Facility, FacilityImage, FacilityType, assoc_facility_owners
 from .schemas import (
     FacilityCreate,
     FacilityImageCreate,
@@ -41,6 +43,51 @@ class FacilityService(BaseCRUDService[Facility, FacilityCreate, FacilityUpdate])
             await session.scalars(select(Facility).where(Facility.type_id == type_id))
         ).all()
         return facilities
+
+    async def add_owner(
+        self, session: AsyncSession, facility: Facility, user: User
+    ) -> None:
+        await session.execute(
+            insert(assoc_facility_owners).values(
+                user_id=user.id, facility_id=facility.id
+            )
+        )
+
+        await session.execute(
+            update(User).where(User.id == user.id).values(role="owner")
+        )
+
+    async def remove_owner(
+        self, session: AsyncSession, facility: Facility, user: User
+    ) -> None:
+        print(
+            (
+                await session.execute(
+                    select(assoc_facility_owners).where(
+                        assoc_facility_owners.c.user_id == user.id
+                    )
+                )
+            ).all()
+        )
+        await session.execute(
+            delete(assoc_facility_owners)
+            .where(assoc_facility_owners.c.user_id == user.id)
+            .where(assoc_facility_owners.c.facility_id == facility.id)
+        )
+
+        remaining_facilities = (
+            await session.execute(
+                select(sqla_func.count())
+                .select_from(Facility)
+                .join(Facility.owners)
+                .where(User.id == user.id)
+            )
+        ).scalar()
+
+        if remaining_facilities == 0:
+            await session.execute(
+                update(User).where(User.id == user.id).values(role=UserRole.normal)
+            )
 
 
 class FacilityImageService(
