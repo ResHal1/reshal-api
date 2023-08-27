@@ -1,9 +1,9 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytz
-from pydantic import root_validator, validator
+from pydantic import Field, root_validator, validator
 
 from reshal_api.base import ORJSONBaseModel
 from reshal_api.payment.schemas import PaymentRead
@@ -52,7 +52,7 @@ class ReservationCreate(ReservationCreateBase):
 class ReservationReadBase(ORJSONBaseModel):
     id: uuid.UUID
     facility_id: uuid.UUID
-    price: Decimal
+    price: str = Field(..., min_length=1)
     # timeframe_id: uuid.UUID
     user_id: uuid.UUID
     start_time: datetime

@@ -1,6 +1,7 @@
 import uuid
-from decimal import Decimal
 from typing import Optional
+
+from pydantic import Field
 
 from reshal_api.base import ORJSONBaseModel
 
@@ -9,7 +10,7 @@ from .models import PaymentStatus
 
 class PaymentBase(ORJSONBaseModel):
     reservation_id: Optional[uuid.UUID]
-    price: Decimal
+    price: str = Field(..., min_length=1)
 
 
 class PaymentRead(PaymentBase):
