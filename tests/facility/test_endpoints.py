@@ -135,7 +135,7 @@ async def test_create_facility(
         lat=facility.lat,
         lon=facility.lon,
         address=facility.address,
-        price=facility.price,
+        price="10.00",
         image_url=facility.image_url,
         type_id=facility_type.id,
     )
@@ -148,10 +148,10 @@ async def test_create_facility(
 
     response_data = response.json()
 
+    assert response_data["price"] == str(data.price)
     assert all(
         (
-            math.isclose(response_data["price"], data_dict["price"])
-            and response_data[key] == data_dict[key]
+            response_data[key] == data_dict[key]
             for key in [
                 "name",
                 "description",
@@ -209,7 +209,7 @@ async def test_get_all_admin(
         )
         assert facility_from_response["type"]["id"] == str(facility.type_id)
         assert facility_from_response["type"]["name"] == facility.type.name
-        assert math.isclose(facility_from_response["price"], facility.price)
+        assert facility_from_response["price"] == str(facility.price)
 
 
 async def test_facilities_list_me(

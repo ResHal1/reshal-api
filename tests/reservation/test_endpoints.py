@@ -101,9 +101,12 @@ async def test_create(
 ):
     facility = facility_factory.create()
 
+    start_time = BASE_DT + timedelta(days=21)
+    end_time = start_time + timedelta(hours=2)
     data = {
         "facilityId": str(facility.id),
-        "startTime": (BASE_DT + timedelta(days=21)).isoformat(),
+        "startTime": start_time.isoformat(),
+        "endTime": end_time.isoformat(),
     }
 
     response = await admin_client.client.post("/reservations", json=data)
@@ -113,6 +116,69 @@ async def test_create(
 
     reservation = await db_session.execute(select(Reservation).filter_by(id=data["id"]))
     assert reservation
+
+
+async def test_create_reservation_length_too_short(
+    admin_client: AuthClientFixture,
+    facility_factory: FacilityFactory,
+):
+    facility = facility_factory.create()
+
+    start_time = BASE_DT + timedelta(minutes=10)
+    end_time = start_time + timedelta(minutes=10)
+    data = {
+        "facilityId": str(facility.id),
+        "startTime": start_time.isoformat(),
+        "endTime": end_time.isoformat(),
+    }
+
+    response = await admin_client.client.post("/reservations", json=data)
+    assert response.status_code == 422
+
+    data = response.json()
+    assert data["detail"][0]["msg"] == "Reservation must be at least 30 minutes long."
+
+
+async def test_create_reservation_length_too_long(
+    admin_client: AuthClientFixture,
+    facility_factory: FacilityFactory,
+):
+    facility = facility_factory.create()
+
+    start_time = BASE_DT + timedelta(minutes=10)
+    end_time = start_time + timedelta(days=2)
+    data = {
+        "facilityId": str(facility.id),
+        "startTime": start_time.isoformat(),
+        "endTime": end_time.isoformat(),
+    }
+
+    response = await admin_client.client.post("/reservations", json=data)
+    assert response.status_code == 422
+
+    data = response.json()
+    assert data["detail"][0]["msg"] == "Reservation must not be longer than 24 hours."
+
+
+async def test_create_reservation_price(
+    db_session: AsyncSession,
+    admin_client: AuthClientFixture,
+    facility_factory: FacilityFactory,
+):
+    facility = facility_factory.create()
+
+    start_time = BASE_DT + timedelta(days=21)
+    end_time = start_time + timedelta(hours=2)
+    data = {
+        "facilityId": str(facility.id),
+        "startTime": start_time.isoformat(),
+        "endTime": end_time.isoformat(),
+    }
+
+    response = await admin_client.client.post("/reservations", json=data)
+    assert response.status_code == 201
+
+    data = response.json()
 
 
 async def test_me(
