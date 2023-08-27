@@ -1,9 +1,11 @@
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import pkg_resources
 from alembic import command as alembic_command
 from alembic.config import Config as AlembicConfig
 from httpx import AsyncClient
+from pytest import Config as PytestConfig
+from sqlalchemy import Engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.sql import text
@@ -18,21 +20,28 @@ class AuthClientFixture(NamedTuple):
     user: User
 
 
-alembic_config = AlembicConfig(
-    pkg_resources.resource_filename("reshal_api", "alembic.ini")
-)
-alembic_config.set_main_option("script_location", "reshal_api:migrations")
+async def authenticate_client(client: AsyncClient, email: str, password: str):
+    data = {"email": email, "password": password}
+
+    response = await client.post("/auth/token", json=data)
+    assert response.status_code == 200
 
 
-def _alembic_upgrade(connection: AsyncConnection):
-    alembic_config.attributes["connection"] = connection
-    alembic_command.upgrade(alembic_config, "head")
+# alembic_config = AlembicConfig(
+#     pkg_resources.resource_filename("reshal_api", "alembic.ini")
+# )
+# alembic_config.set_main_option("script_location", "reshal_api:migrations")
 
 
-async def run_migrations(db_url: str, echo=False):
-    engine = create_async_engine(db_url, echo=echo)
-    async with engine.begin() as conn:
-        await conn.run_sync(_alembic_upgrade)
+# def _alembic_upgrade(connection: AsyncConnection):
+#     alembic_config.attributes["connection"] = connection
+#     alembic_command.upgrade(alembic_config, "head")
+
+
+# async def run_migrations(db_url: str, echo=False):
+#     engine = create_async_engine(db_url, echo=echo)
+#     async with engine.begin() as conn:
+#         await conn.run_sync(_alembic_upgrade)
 
 
 """
@@ -47,7 +56,7 @@ async def _get_scalar_result(engine: AsyncEngine, query: TextClause):
         return await conn.scalar(query)
 
 
-async def database_exists(db_url: str, echo=False) -> bool:
+async def async_database_exists(db_url: str, echo=False) -> bool:
     url = make_url(db_url)
     database = url.database
     url = _set_url_database(url, "postgres")
@@ -64,7 +73,7 @@ async def database_exists(db_url: str, echo=False) -> bool:
         await engine.dispose()
 
 
-async def create_database(db_url: str, encoding="utf8", template=None):
+async def async_create_database(db_url: str, encoding="utf8", template=None):
     url = make_url(db_url)
     database = url.database
     url = _set_url_database(url, "postgres")
@@ -84,7 +93,7 @@ async def create_database(db_url: str, encoding="utf8", template=None):
     await engine.dispose()
 
 
-async def drop_database(db_url: str):
+async def async_drop_database(db_url: str):
     url = make_url(db_url)
     database = url.database
 
@@ -110,3 +119,17 @@ async def drop_database(db_url: str):
         await conn.execute(sql)
 
     await engine.dispose()
+
+
+async def get_prepared_async_engine(url: str, pytest_config: PytestConfig) -> Engine:
+    db_exists = await async_database_exists(url)
+    if db_exists:
+        await async_drop_database(url)
+    await async_create_database(url)
+
+    engine = create_async_engine(url, echo=pytest_config.getoption("verbose") > 2)  # type: ignore
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    return engine

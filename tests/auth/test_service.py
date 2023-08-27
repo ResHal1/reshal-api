@@ -38,9 +38,10 @@ async def test_create(db_session: AsyncSession, auth_service: AuthService):
 async def test_update(
     db_session: AsyncSession,
     auth_service: AuthService,
+    user_factory: UserFactory,
     data: dict[str, str] | UserUpdate,
 ):
-    user = UserFactory.create()
+    user = user_factory.create()
 
     updated_user = await auth_service.update(
         db_session,

@@ -117,6 +117,12 @@ async def test_me_get(auth_client: AuthClientFixture):
             "currentPassword": UserFactory._DEFAULT_PASSWORD,
             "email": fake.email(),
         },
+        {
+            "currentPassword": UserFactory._DEFAULT_PASSWORD,
+            "email": fake.email(),
+            "firstName": fake.first_name(),
+            "lastName": fake.last_name(),
+        },
     ),
 )
 async def test_me_put(auth_client: AuthClientFixture, data: dict[str, str]):
