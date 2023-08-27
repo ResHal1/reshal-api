@@ -1,4 +1,5 @@
 import uuid
+from decimal import Decimal
 from typing import Optional
 
 from pydantic import Field
@@ -22,7 +23,7 @@ class PaymentRead(PaymentBase):
 
 
 class PaymentCreate(PaymentBase):
-    ...
+    price: Decimal
 
 
 class PaymentUpdate(PaymentBase):

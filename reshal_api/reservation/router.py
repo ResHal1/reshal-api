@@ -80,29 +80,33 @@ async def create_reservation(
     #     raise NotFound("Timeframe not found")
 
     # end_time = data.start_time + timedelta(seconds=timeframe.duration)
-    end_time = data.start_time + timedelta(hours=1)
-
     facility = await facility_service.get(session, id=data.facility_id)
 
     if facility is None:
         raise NotFound()
 
     if await reservation_service.is_overlapping(
-        session, data.facility_id, data.start_time, end_time
+        session,
+        data.facility_id,
+        data.start_time,
+        data.end_time,
     ):
         raise Conflict("Reservation overlaps with another reservation")
 
+    reservation_price = reservation_service.calcualte_price(
+        facility.price, data.start_time, data.end_time
+    )
+
     payment = await payment_service.create_payment(
-        session, create_obj=PaymentCreate(reservation_id=None, price=facility.price)
+        session, create_obj=PaymentCreate(reservation_id=None, price=reservation_price)
     )
     await session.flush()
 
     create_obj = ReservationCreate(
         **data.dict(),
-        price=facility.price,
+        price=reservation_price,
         payment_id=payment.id,
         user_id=user.id,
-        end_time=end_time
     )
     reservation = await reservation_service.create(session, create_obj)
     payment.reservation_id = reservation.id
