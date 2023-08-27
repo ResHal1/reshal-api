@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.auth.dependencies import get_admin, get_user
@@ -14,12 +14,17 @@ from reshal_api.facility.service import FacilityService
 from reshal_api.payment.dependencies import get_payment_service
 from reshal_api.payment.schemas import PaymentCreate
 from reshal_api.payment.service import PaymentService
-from reshal_api.timeframe.dependencies import get_timeframe_service
-from reshal_api.timeframe.service import TimeFrameService
 
+# from reshal_api.timeframe.dependencies import get_timeframe_service
+# from reshal_api.timeframe.service import TimeFrameService
 from .dependencies import get_reservation_service, valid_reservation
 from .models import Reservation
-from .schemas import ReservationCreate, ReservationCreateBase, ReservationReadBase
+from .schemas import (
+    ReservationCreate,
+    ReservationCreateBase,
+    ReservationRead,
+    ReservationReadBase,
+)
 from .service import ReservationService
 
 router = APIRouter(tags=["reservation"])
@@ -54,7 +59,11 @@ async def get_reservations_me(
     return user_reservations
 
 
-@router.post("")
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    response_model=ReservationRead,
+)
 async def create_reservation(
     data: ReservationCreateBase,
     session: AsyncSession = Depends(get_db_session),
@@ -100,7 +109,7 @@ async def create_reservation(
     return reservation
 
 
-@router.get("/{reservation_id}")
+@router.get("/{reservation_id}", response_model=ReservationRead)
 async def get_reservation_by_id(
     reservation_id: str,
     session: AsyncSession = Depends(get_db_session),
@@ -117,6 +126,7 @@ async def get_reservation_by_id(
     return reservation
 
 
+# FIXME: ADMIN
 @router.delete("/{reservation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_reservation(
     reservation_id: str,
@@ -125,6 +135,6 @@ async def delete_reservation(
     reservation_service: ReservationService = Depends(get_reservation_service),
 ):
     reservation = await reservation_service.get(session, id=reservation_id)
-    if reservation and reservation.user_id == user.id:
+    if reservation and (user.role == UserRole.admin or reservation.user_id == user.id):
         await reservation_service.delete(session, db_obj=reservation)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

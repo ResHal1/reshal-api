@@ -1,4 +1,4 @@
-import logging
+# import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +12,8 @@ from reshal_api.lifespan import lifespan
 from reshal_api.opentelemetry import PrometheusMiddleware, metrics, setup_otlp
 from reshal_api.payment.router import router as payment_router
 from reshal_api.reservation.router import router as reservation_router
-from reshal_api.timeframe.router import router as timeframe_router
+
+# from reshal_api.timeframe.router import router as timeframe_router
 
 config = get_config()
 
