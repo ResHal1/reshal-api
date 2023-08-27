@@ -23,7 +23,7 @@ class Reservation(Base, TimestampMixin):
     facility_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("facility.id", ondelete="SET NULL"),
     )
-    price: Mapped[Decimal] = mapped_column(Numeric(12, 0))
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     # timeframe_id: Mapped[uuid.UUID] = mapped_column(
     #     ForeignKey("timeframe.id", ondelete="SET NULL")
     # )

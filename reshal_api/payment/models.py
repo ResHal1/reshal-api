@@ -25,4 +25,4 @@ class Payment(Base, TimestampMixin):
         ForeignKey("reservation.id", ondelete="SET NULL")
     )
     status: Mapped[PaymentStatus] = mapped_column(default=PaymentStatus.pending)
-    price: Mapped[Decimal] = mapped_column(Numeric(12, 0))
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 2))

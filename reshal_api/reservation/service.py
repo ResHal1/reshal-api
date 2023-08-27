@@ -1,5 +1,7 @@
+import math
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Sequence
 
 from sqlalchemy import select
@@ -51,3 +53,17 @@ class ReservationService(
             (await session.execute(q.filter(*args).filter_by(**kwargs))).scalars().all()
         )
         return reservations
+
+    def calcualte_price(
+        self,
+        facility_price_per_hour: Decimal,
+        start_time: datetime,
+        end_time: datetime,
+    ) -> Decimal:
+        """
+        Calculate the price of the facility for the given time range
+        Rounds up the hours to the next integer if the time range is not a whole hour
+        """
+        hours = math.ceil((end_time - start_time).total_seconds() / 3600)
+        total_price = hours * facility_price_per_hour
+        return total_price

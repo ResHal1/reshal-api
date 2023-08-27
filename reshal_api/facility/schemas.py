@@ -1,8 +1,8 @@
 import uuid
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 
-from pydantic import AnyHttpUrl, validator
+from pydantic import AnyHttpUrl, Field, validator
 
 from reshal_api.auth.schemas import UserRead
 from reshal_api.base import ORJSONBaseModel
@@ -67,13 +67,32 @@ def validate_lon(value: float) -> float:
     return value
 
 
+def validate_price_decimal_places(cls, value: str | None) -> Decimal | None:
+    if value is None:
+        return value
+
+    try:
+        price_decimal = Decimal(value)
+
+        if price_decimal < 0:
+            raise ValueError("Price must be positive")
+        # Ensure that the price always has two decimal places
+        return Decimal(f"{price_decimal:.2f}")
+    except InvalidOperation:
+        raise ValueError("Invalid price format")
+
+
 class FacilityBase(ORJSONBaseModel):
+    """
+    Price should be sent as a string, javascript loses precision with floats, gets parsed as a Decimal",
+    """
+
     name: str
     description: Optional[str]
     lat: float
     lon: float
     address: str
-    price: Decimal
+    price: str = Field(..., min_length=1)
     image_url: AnyHttpUrl
 
     class Config:
@@ -81,6 +100,9 @@ class FacilityBase(ORJSONBaseModel):
 
     _validate_lat = validator("lat", allow_reuse=True)(validate_lat)
     _validate_lon = validator("lon", allow_reuse=True)(validate_lon)
+    _validate_price = validator("price", pre=True, always=True, allow_reuse=True)(
+        validate_price_decimal_places
+    )
 
 
 class FacilityReadBase(FacilityBase):
@@ -106,12 +128,15 @@ class FacilityUpdate(FacilityBase):
     lat: Optional[float]
     lon: Optional[float]
     address: Optional[str]
-    price: Optional[Decimal]
+    price: Optional[str]
     image_url: Optional[AnyHttpUrl]
     type_id: Optional[uuid.UUID]
 
     _validate_lat = validator("lat", allow_reuse=True)(validate_lat)
     _validate_lon = validator("lon", allow_reuse=True)(validate_lon)
+    _validate_price = validator("price", pre=True, always=True, allow_reuse=True)(
+        validate_price_decimal_places
+    )
 
 
 class FacilityOwnership(ORJSONBaseModel):

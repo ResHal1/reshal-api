@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 import pytest
 import pytz
@@ -94,3 +95,36 @@ async def test_service_get_all_in_timeframe(
     )
 
     assert result2 == []
+
+
+@pytest.mark.parametrize(
+    "end_time_timedelta,facility_price,expected_total_price",
+    (
+        (
+            timedelta(hours=1),
+            Decimal(10.0),
+            Decimal(10.0),
+        ),
+        (
+            timedelta(hours=1, minutes=5),
+            Decimal(10.0),
+            Decimal(20.0),
+        ),
+        (
+            timedelta(hours=2, minutes=5),
+            Decimal(10.50),
+            Decimal(31.50),
+        ),
+    ),
+)
+def test_service_calculate_price(
+    end_time_timedelta: timedelta,
+    facility_price: Decimal,
+    expected_total_price: Decimal,
+    reservation_service: ReservationService,
+):
+    start_time = datetime.now()
+    end_time = start_time + end_time_timedelta
+    result = reservation_service.calcualte_price(facility_price, start_time, end_time)
+
+    assert result == expected_total_price
