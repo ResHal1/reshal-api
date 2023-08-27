@@ -15,7 +15,7 @@ from .service import PaymentService
 router = APIRouter(tags=["payment"])
 
 
-@router.get("/", response_model=list[PaymentRead], dependencies=[Depends(get_admin)])
+@router.get("", response_model=list[PaymentRead], dependencies=[Depends(get_admin)])
 async def get_payments(
     session: AsyncSession = Depends(get_db_session),
     payment_service: PaymentService = Depends(get_payment_service),

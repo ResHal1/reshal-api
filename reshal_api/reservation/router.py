@@ -26,7 +26,7 @@ router = APIRouter(tags=["reservation"])
 
 
 @router.get(
-    "/", response_model=list[ReservationReadBase], dependencies=[Depends(get_admin)]
+    "", response_model=list[ReservationReadBase], dependencies=[Depends(get_admin)]
 )
 async def get_all_reservations(
     startTime: Annotated[datetime, DatetimeQuery()] = datetime.now(),
@@ -54,7 +54,7 @@ async def get_reservations_me(
     return user_reservations
 
 
-@router.post("/")
+@router.post("")
 async def create_reservation(
     data: ReservationCreateBase,
     session: AsyncSession = Depends(get_db_session),

@@ -36,10 +36,20 @@ reshal-api = "reshal_api.main:run"
 exclude = ["venv", ".nox"]
 line-length = 120
 target-version = "py311"
-ignore = ["F401"]
+unfixable = ["F401", "F841"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning:pkg_resources",
+    "ignore::DeprecationWarning:google.rpc",
+]
+env = [
+    "APP_ENVIRONMENT=TESTING",
+    "APP_SECRET_KEY=pytestsecret",
+    "APP_ACCESS_TOKEN_COOKIE_NAME=reshal_access_token_pytest",
+    "DB_NAME=reshaldbtest",
+]
 
 [tool.poetry.group.dev.dependencies]
 black = { version = "^23.3.0", allow-prereleases = true }
@@ -49,6 +59,10 @@ pytest-asyncio = "^0.21.0"
 httpx = "^0.24.0"
 typer = { extras = ["all"], version = "^0.7.0" }
 psycopg2 = "^2.9.6"
+pytest-env = "^0.8.2"
+sqlalchemy-utils = "^0.41.1"
+factory-boy = "^3.2.1"
+faker = "^18.11.1"
 
 [build-system]
 requires = ["poetry-core"]

@@ -16,7 +16,7 @@ config = get_config()
 router = APIRouter(tags=["auth"])
 
 
-@router.get("/", response_model=list[UserRead], dependencies=[Depends(get_admin)])
+@router.get("", response_model=list[UserRead], dependencies=[Depends(get_admin)])
 async def get_users(
     session: AsyncSession = Depends(get_db_session),
     auth_service: AuthService = Depends(get_auth_service),
@@ -25,7 +25,7 @@ async def get_users(
     return users
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserRead)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=UserRead)
 async def register(
     data: UserCreate,
     session: AsyncSession = Depends(get_db_session),

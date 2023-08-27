@@ -10,13 +10,13 @@ from .models import UserRole
 
 # Validators
 EMAIL_BLACKLIST_REGEX = re.compile(
-    r"^(admin|administrator|root|sysadmin|me|sales|info|support|contact|help|feedback|abuse|webmaster|postmaster|noreply|marketing|spam)@"
+    r"^(admin|administrator|root|sysadmin|me|sales|info|support|contact|help|feedback|abuse|webmaster|postmaster|noreply|marketing|spam)@reshal\.com$"
 )
-PASSWORD_REGEX = re.compile(r"^(?=.*[\d])(?=.*[!@#$%^&*])[\w!@#$%^&*]{6,128}$")
+PASSWORD_REGEX = re.compile(r"^(?=.*[\d])(?=.*[!@#$%^&*()_+])[\w!@#$%^&*()_+]{6,128}$")
 
 
 def validate_email_in_blacklist(email: str) -> str:
-    if re.match(EMAIL_BLACKLIST_REGEX, email) or re.match(r"@reshal\.com$", email):
+    if re.match(EMAIL_BLACKLIST_REGEX, email):
         raise ValueError("Email is not allowed")
     return email
 
@@ -25,7 +25,7 @@ def validate_password_complexity(password: str) -> str:
     if not re.match(PASSWORD_REGEX, password):
         raise ValueError(
             "Password must contain at least one digit"
-            " and one special character from the set !@#$%^&*,"
+            " and one special character from the set !@#$%^&*()_+"
             " and be between 6 and 128 characters long"
         )
     return password
@@ -59,6 +59,9 @@ class UserCreate(ORJSONBaseModel):
         validate_email_in_blacklist
     )
 
+    class Config:
+        error_msg_templates = {"value_error.email": "Email address is not valid"}
+
 
 class UserUpdate(ORJSONBaseModel):
     current_password: str
@@ -75,6 +78,9 @@ class UserUpdate(ORJSONBaseModel):
     _validate_email_in_blacklist = validator("email", allow_reuse=True)(
         validate_email_in_blacklist
     )
+
+    class Config:
+        error_msg_templates = {"value_error.email": "Email address is not valid"}
 
 
 # JWT

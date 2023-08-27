@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from reshal_api.auth.router import router as auth_router
@@ -21,13 +22,17 @@ app = FastAPI(
     version=config.VERSION,
     root_path=config.ROOT_PATH,
     debug=config.ENVIRONMENT.is_local,
+    default_response_class=ORJSONResponse,
     docs_url=None if config.ENVIRONMENT.is_production else "/docs",
     redocs_url=None if config.ENVIRONMENT.is_production else "/docs",
     openapi_url=None if config.ENVIRONMENT.is_production else "/openapi.json",
 )
 
-app.add_middleware(PrometheusMiddleware, app_name=config.OTLP_APP_NAME)
-setup_otlp(app, config.OTLP_APP_NAME, config.OTLP_GRPC_ENDPOINT)
+
+if not config.ENVIRONMENT.is_testing:
+    app.add_middleware(PrometheusMiddleware, app_name=config.OTLP_APP_NAME)
+    setup_otlp(app, config.OTLP_APP_NAME, config.OTLP_GRPC_ENDPOINT)
+
 app.add_middleware(CORSMiddleware, **CORSSettings().dict())
 app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
 app.include_router(auth_router, prefix="/auth")
