@@ -50,6 +50,7 @@ async def test_service_is_overlapping(
     assert result == is_overlapping
 
 
+# FIXME: flaky
 async def test_service_get_all_in_timeframe(
     db_session: AsyncSession,
     reservation_service: ReservationService,
