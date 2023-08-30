@@ -11,7 +11,7 @@ from reshal_api.auth.models import User, UserRole
 from reshal_api.auth.service import AuthService
 from reshal_api.database import get_db_session
 from reshal_api.exceptions import BadRequest, Conflict, Forbidden, NotFound
-from reshal_api.reservation.schemas import ReservationReadBase
+from reshal_api.reservation.schemas import ReservationReadBase  # noqa: F401
 
 from .dependencies import (
     facility_exists,
@@ -19,7 +19,7 @@ from .dependencies import (
     get_facility_service,
     get_facility_type_service,
 )
-from .models import Facility, FacilityImage
+from .models import Facility, FacilityImage  # noqa: F401
 from .schemas import (
     FacilityCreate,
     FacilityOwnership,
@@ -219,10 +219,7 @@ async def get_reservations_for_facility(
 async def get_facility_by_id(
     facility_id: str,
     facility: Facility = Depends(facility_exists),
-    user: User = Depends(get_owner),
 ):
-    if user.role != UserRole.admin and not facility.is_owner(user.id):
-        raise Forbidden()
     return facility
 
 

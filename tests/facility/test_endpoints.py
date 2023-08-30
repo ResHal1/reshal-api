@@ -111,11 +111,11 @@ async def test_facility_get_all(client: AsyncClient, facility_factory: FacilityF
 
 
 async def test_facility_get_by_id(
-    admin_client: AuthClientFixture, facility_factory: FacilityFactory
+    client: AsyncClient, facility_factory: FacilityFactory
 ):
     facility = facility_factory.create()
 
-    response = await admin_client.client.get(f"/facilities/{str(facility.id)}")
+    response = await client.get(f"/facilities/{str(facility.id)}")
     assert response.status_code == 200
     assert response.json()["id"] == str(facility.id)
 
