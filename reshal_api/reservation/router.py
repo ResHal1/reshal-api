@@ -34,14 +34,15 @@ router = APIRouter(tags=["reservation"])
     "", response_model=list[ReservationReadBase], dependencies=[Depends(get_admin)]
 )
 async def get_all_reservations(
-    startTime: Annotated[datetime, DatetimeQuery()] = datetime.now(),
-    endTime: Annotated[datetime, DatetimeQuery()] = datetime.now() + timedelta(weeks=4),
+    # startTime: Annotated[datetime, DatetimeQuery()] = datetime.now(),
+    # endTime: Annotated[datetime, DatetimeQuery()] = datetime.now() + timedelta(weeks=4),
     session: AsyncSession = Depends(get_db_session),
     reservation_service: ReservationService = Depends(get_reservation_service),
 ):
-    reservations = await reservation_service.get_all_in_timeframe(
-        session, startTime, endTime
-    )
+    # reservations = await reservation_service.get_all_in_timeframe(
+    #     session, startTime, endTime
+    # )
+    reservations = await reservation_service.get_all(session)
     return reservations
 
 
