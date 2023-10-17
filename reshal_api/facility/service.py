@@ -1,11 +1,13 @@
+import math
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from logging import getLogger
 from typing import Any, Sequence
 
 from fastapi import UploadFile
-from sqlalchemy import delete, exists
+from sqlalchemy import delete, exists, insert, select, update
 from sqlalchemy import func as sqla_func
-from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.auth.models import User, UserRole
@@ -28,6 +30,23 @@ logger = getLogger(__name__)
 class FacilityService(BaseCRUDService[Facility, FacilityCreate, FacilityUpdate]):
     def __init__(self) -> None:
         super().__init__(Facility)
+
+    async def create(
+        self,
+        session: AsyncSession,
+        create_obj: FacilityCreate,
+    ) -> Facility:
+        facility = Facility(**create_obj.dict(exclude={"images"}))
+        session.add(facility)
+        await session.flush()
+        images = [
+            FacilityImage(facility_id=facility.id, path=image.path)
+            for image in create_obj.images
+        ]
+        session.add_all(images)
+        await session.flush()
+
+        return facility
 
     async def get_facilities_by_owner_id(
         self, session: AsyncSession, owner_id: uuid.UUID

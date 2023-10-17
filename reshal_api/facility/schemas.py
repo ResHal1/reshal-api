@@ -16,17 +16,25 @@ class FacilityImageBase(ORJSONBaseModel):
 
 class FacilityImageRead(FacilityImageBase):
     id: uuid.UUID
-    path: str
+    path: AnyHttpUrl = Field(alias="url")
 
     class Config:
         orm_mode = True
 
 
-class FacilityImageCreate(FacilityImageBase):
-    ...
+class FacilityImagePath(ORJSONBaseModel):
+    path: AnyHttpUrl = Field(alias="url")
+
+    class Config:
+        orm_mode = True
 
 
-class FacilityImageUpdate(FacilityImageBase):
+class FacilityImageCreate(FacilityImagePath):
+    facility_id: uuid.UUID
+    path: AnyHttpUrl = Field(alias="url")
+
+
+class FacilityImageUpdate(FacilityImagePath):
     ...
 
 
@@ -93,7 +101,7 @@ class FacilityBase(ORJSONBaseModel):
     lon: float
     address: str
     price: str = Field(..., min_length=1)
-    image_url: AnyHttpUrl
+    images: list[FacilityImagePath]
 
     class Config:
         orm_mode = True
@@ -120,6 +128,7 @@ class FacilityReadAdmin(FacilityRead):
 
 class FacilityCreate(FacilityBase):
     type_id: uuid.UUID
+    images: list[FacilityImagePath]
 
 
 class FacilityUpdate(FacilityBase):
@@ -129,8 +138,8 @@ class FacilityUpdate(FacilityBase):
     lon: Optional[float]
     address: Optional[str]
     price: Optional[str]
-    image_url: Optional[AnyHttpUrl]
     type_id: Optional[uuid.UUID]
+    images: Optional[list[FacilityImagePath]]
 
     _validate_lat = validator("lat", allow_reuse=True)(validate_lat)
     _validate_lon = validator("lon", allow_reuse=True)(validate_lon)
