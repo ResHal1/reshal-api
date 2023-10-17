@@ -239,7 +239,7 @@ async def create_facility(
         raise BadRequest(detail="Facility type not found")
 
     facility = await facility_service.create(session, data)
-    await session.refresh(facility, ["owners", "type"])
+    await session.refresh(facility, ["owners", "type", "images"])
     return facility
 
 
@@ -254,11 +254,20 @@ async def update_facility(
 ):
     if data.type_id and not bool(await types_service.get(session, id=data.type_id)):
         raise BadRequest(detail="Facility type not found")
-    """multipart/form-data"""
+
     if user.role != UserRole.admin and not facility.is_owner(user.id):
         raise Forbidden()
+
+    data_dict = data.dict(exclude_unset=True)
+
+    if data_dict.get("images", False):
+        facility.images = [
+            FacilityImage(path=image["path"]) for image in data_dict["images"]
+        ]
+        del data_dict["images"]
+
     updated_facility = await facility_service.update(
-        session, db_obj=facility, update_obj=data
+        session, db_obj=facility, update_obj=data_dict
     )
 
     return updated_facility
@@ -276,7 +285,7 @@ async def delete_facility(
     facility_service: FacilityService = Depends(get_facility_service),
     facility_image_service: FacilityImageService = Depends(get_facility_image_service),
 ):
-    await facility_image_service.delete_all_for_facility(session, facility_id)
+    # await facility_image_service.delete_all_for_facility(session, facility_id)
     await facility_service.delete(session, id=facility_id)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
