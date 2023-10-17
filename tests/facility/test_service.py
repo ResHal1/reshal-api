@@ -1,8 +1,9 @@
 from faker import Faker
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.auth.models import User, UserRole
-from reshal_api.facility.models import Facility
+from reshal_api.facility.models import Facility, FacilityImage
 from reshal_api.facility.service import FacilityService, FacilityTypeService
 from tests.factories import FacilityFactory, FacilityTypeFactory, UserFactory
 
@@ -164,3 +165,22 @@ async def test_facility_service_remove_owner_keep_owner_role_if_remaining_facili
     facility_from_db_2 = await db_session.get(Facility, facilities[1].id)
     assert facility_from_db_2 is not None
     assert user.id in [u.id for u in facility_from_db_2.owners]
+
+
+async def test_facility_service_delete_images_are_removed_on_delete(
+    db_session: AsyncSession,
+    facility_service: FacilityService,
+    facility_factory: FacilityFactory,
+):
+    facility = facility_factory.create()
+
+    await facility_service.delete(db_session, id=str(facility.id))
+    await db_session.commit()
+
+    images_from_db = (
+        await db_session.execute(
+            select(FacilityImage).where(FacilityImage.facility_id == str(facility.id))
+        )
+    ).fetchall()
+
+    assert len(images_from_db) == 0

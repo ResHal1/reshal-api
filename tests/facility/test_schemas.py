@@ -32,7 +32,7 @@ def test_lat_validators(
         "lon": fake.longitude(),
         "address": fake.address(),
         "price": 10.00,
-        "image_url": fake.url(),
+        "images": [{"url": fake.url()}],
     }
 
     if isinstance(Schema, FacilityUpdate):
@@ -70,7 +70,7 @@ def test_lon_validatos(
         "lon": lon,
         "address": fake.address(),
         "price": 10,
-        "image_url": fake.url(),
+        "images": [{"url": fake.url()}],
     }
 
     if isinstance(Schema, FacilityUpdate):
@@ -103,7 +103,7 @@ def test_facility_base_price_validator(price: Any, is_valid: bool):
         "lon": fake.longitude(),
         "address": fake.address(),
         "price": price,
-        "image_url": fake.url(),
+        "images": [{"url": fake.url()}],
     }
     if is_valid:
         try:
@@ -131,7 +131,7 @@ def test_facility_update_price_validator(price: Any, is_valid: bool):
         "lon": fake.longitude(),
         "address": fake.address(),
         "price": price,
-        "image_url": fake.url(),
+        "images": [{"url": fake.url()}],
     }
     if is_valid:
         try:
@@ -149,7 +149,7 @@ def test_facility_base_price_is_manadatory():
         "lat": fake.latitude(),
         "lon": fake.longitude(),
         "address": fake.address(),
-        "image_url": fake.url(),
+        "images": [{"url": fake.url()}],
     }
     with pytest.raises(ValidationError):
         FacilityBase(**data)
@@ -161,6 +161,6 @@ def test_facility_update_price_is_not_manadatory():
         "lat": fake.latitude(),
         "lon": fake.longitude(),
         "address": fake.address(),
-        "image_url": fake.url(),
+        "images": [{"url": fake.url()}],
     }
     FacilityUpdate(**data)
