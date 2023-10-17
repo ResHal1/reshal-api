@@ -1,11 +1,9 @@
-import math
-
 import humps
 import pytest
+from faker import Faker
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import select
 
 from reshal_api.auth.models import UserRole
 from reshal_api.auth.service import AuthService
@@ -20,6 +18,8 @@ from tests.factories import (
     UserFactory,
 )
 from tests.utils import AuthClientFixture, authenticate_client
+
+fake = Faker()
 
 # Facility Type Endpoints
 
@@ -136,7 +136,7 @@ async def test_create_facility(
         lon=facility.lon,
         address=facility.address,
         price="10.00",
-        image_url=facility.image_url,
+        images=facility.images,
         type_id=facility_type.id,
     )
     data_dict = data.dict()
@@ -161,7 +161,12 @@ async def test_create_facility(
             ]
         )
     )
-    assert response_data["imageUrl"] == data_dict["image_url"]
+    assert all(
+        [
+            image["url"] in [img.path for img in data.images]
+            for image in response_data["images"]
+        ]
+    )
     assert response_data["type"]["id"] == str(facility_type.id)
     assert response_data["type"]["name"] == facility_type.name
 
@@ -197,7 +202,6 @@ async def test_get_all_admin(
                     "lat",
                     "lon",
                     "address",
-                    "image_url",
                 ]
             )
         )
@@ -206,6 +210,12 @@ async def test_get_all_admin(
                 owner["id"] in [str(admin_client.user.id), str(user.id)]
                 for owner in facility_from_response["owners"]
             )
+        )
+        assert all(
+            [
+                image["url"] in [img.path for img in facility.images]
+                for image in facility_from_response["images"]
+            ]
         )
         assert facility_from_response["type"]["id"] == str(facility.type_id)
         assert facility_from_response["type"]["name"] == facility.type.name
@@ -331,21 +341,46 @@ async def test_get_facility_by_id(
     assert response_data["id"] == str(facility.id)
 
 
+@pytest.mark.parametrize(
+    "update_data",
+    [
+        {
+            "name": "New Name",
+            "description": "New Description",
+            "lat": 70.12,
+            "lon": 12.12,
+            "address": fake.address(),
+            "price": "10.12",
+            "images": [{"url": fake.url()}],
+        },
+        {
+            "lat": 70.12,
+            "lon": 12.12,
+            "price": "10.12",
+        },
+        {
+            "images": [{"url": fake.url()} for _ in range(10)],
+        },
+        {
+            "price": "21.21",
+        },
+        {},
+    ],
+)
 async def test_facility_put(
-    admin_client: AuthClientFixture, facility_factory: FacilityFactory
+    update_data: dict,
+    admin_client: AuthClientFixture,
+    facility_factory: FacilityFactory,
 ):
     facility = facility_factory.create()
 
-    data_dict = {"name": "New Name", "description": "New Description"}
-
     response = await admin_client.client.put(
-        f"/facilities/{str(facility.id)}", json=data_dict
+        f"/facilities/{str(facility.id)}", json=update_data
     )
     assert response.status_code == 200
 
     response_data = response.json()
-    assert response_data["name"] == data_dict["name"]
-    assert response_data["description"] == data_dict["description"]
+    assert all([response_data[key] == update_data[key] for key in update_data.keys()])
 
 
 async def test_facility_delete(

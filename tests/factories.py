@@ -1,3 +1,4 @@
+import random
 from datetime import timedelta
 
 import factory
@@ -8,7 +9,7 @@ from pytz import UTC
 
 from reshal_api.auth import security
 from reshal_api.auth.models import User, UserRole
-from reshal_api.facility.models import Facility, FacilityType
+from reshal_api.facility.models import Facility, FacilityImage, FacilityType
 from reshal_api.payment.models import Payment, PaymentStatus
 from reshal_api.reservation.models import Reservation
 
@@ -139,6 +140,14 @@ class ReservationFactory(BaseFactory):
     #         self.payment_id = extracted.id
 
 
+class FacilityImageFactory(BaseFactory):
+    class Meta:
+        model = FacilityImage
+
+    path = factory.Faker("uri")
+    facility = factory.SubFactory("tests.factories.FacilityFactory", images=None)
+
+
 class FacilityFactory(BaseFactory):
     class Meta:
         model = Facility
@@ -149,11 +158,15 @@ class FacilityFactory(BaseFactory):
     lon = factory.Faker("longitude")
     # lat = factory.LazyAttribute(lambda: fake.local_latlng(country_code="PL")[0])
     # lon = factory.LazyAttribute(lambda: fake.local_latlng(country_code="PL")[1])
-    image_url = factory.Faker("url")
     price = factory.Faker("pydecimal", left_digits=2, right_digits=2, positive=True)
     address = factory.Faker("address", locale="pl_PL")
 
     type = factory.SubFactory(FacilityTypeFactory)
+    images = factory.RelatedFactoryList(
+        FacilityImageFactory,
+        "facility",
+        size=lambda: random.randint(1, 5),  # pyright: ignore
+    )
 
     @factory.post_generation
     def owners(self, create, extracted, **kwargs):
