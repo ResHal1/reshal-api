@@ -53,6 +53,42 @@ async def test_get_all(
     )
 
 
+async def test_get_all_skips_if_facility_id_null(
+    admin_client: AuthClientFixture,
+    facility_factory: FacilityFactory,
+    payment_factory: PaymentFactory,
+    reservation_factory: ReservationFactory,
+):
+    len_ = 5
+    facility = facility_factory.create()
+    reservations = [
+        reservation_factory.create(
+            facility_id=facility.id,
+            payment_id=payment_factory.create().id,
+            start_time=BASE_DT + timedelta(days=i),
+            end_time=BASE_DT + timedelta(days=i, hours=1),
+        )
+        for i in range(len_)
+    ]
+
+    for i in range(3):
+        reservation_factory.create(
+            facility_id=None,
+            payment_id=payment_factory.create().id,
+            start_time=BASE_DT + timedelta(days=i),
+            end_time=BASE_DT + timedelta(days=i, hours=1),
+        )
+
+    response = await admin_client.client.get("/reservations")
+    assert response.status_code == 200
+
+    data = response.json()
+    assert all(
+        (str(reservation.id) in [r["id"] for r in data] for reservation in reservations)
+    )
+    assert all((r["facilityId"] is not None for r in data))
+
+
 # default startTime: datetime.now()
 # default endTime: datetime.now() + timedelta(weeks=4)
 # async def test_get_all_default_query_params(

@@ -1,6 +1,6 @@
 import math
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Sequence
 
@@ -67,3 +67,16 @@ class ReservationService(
         hours = math.ceil((end_time - start_time).total_seconds() / 3600)
         total_price = hours * facility_price_per_hour
         return total_price
+
+    async def reservations_in_future_exist(
+        self, session: AsyncSession, facility_id: str
+    ) -> bool:
+        reservations = (
+            await session.execute(
+                select(Reservation)
+                .filter(Reservation.facility_id == facility_id)
+                .filter(Reservation.start_time >= datetime.now(tz=timezone.utc))
+            )
+        ).scalar()
+
+        return bool(reservations)

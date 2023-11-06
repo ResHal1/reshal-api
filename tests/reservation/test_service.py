@@ -129,3 +129,34 @@ def test_service_calculate_price(
     result = reservation_service.calcualte_price(facility_price, start_time, end_time)
 
     assert result == expected_total_price
+
+
+@pytest.mark.parametrize(
+    "reservation_start,expected",
+    (
+        (BASE_DT + timedelta(hours=1), True),
+        (BASE_DT + timedelta(days=-10), False),
+    ),
+)
+async def test_reservations_in_future_exist(
+    reservation_start: datetime,
+    expected: bool,
+    db_session: AsyncSession,
+    reservation_service: ReservationService,
+    facility_factory: FacilityFactory,
+    payment_factory: PaymentFactory,
+    reservation_factory: ReservationFactory,
+):
+    facility = facility_factory.create()
+    payment = payment_factory.create()
+    reservation_factory.create(
+        start_time=reservation_start,
+        end_time=reservation_start + timedelta(hours=1),
+        facility_id=facility.id,
+        payment_id=payment.id,
+    )
+
+    result = await reservation_service.reservations_in_future_exist(
+        db_session, facility.id
+    )
+    assert result == expected

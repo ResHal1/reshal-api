@@ -1,4 +1,6 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
+import uuid
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.auth.dependencies import (
@@ -11,6 +13,10 @@ from reshal_api.auth.models import User, UserRole
 from reshal_api.auth.service import AuthService
 from reshal_api.database import get_db_session
 from reshal_api.exceptions import BadRequest, Conflict, Forbidden, NotFound
+from reshal_api.reservation.dependencies import (
+    ReservationService,
+    get_reservation_service,
+)
 from reshal_api.reservation.schemas import ReservationReadBase  # noqa: F401
 
 from .dependencies import (
@@ -280,12 +286,23 @@ async def update_facility(
 )
 async def delete_facility(
     facility_id: str,
-    background_tasks: BackgroundTasks,
+    # background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db_session),
     facility_service: FacilityService = Depends(get_facility_service),
-    facility_image_service: FacilityImageService = Depends(get_facility_image_service),
+    reservation_service: ReservationService = Depends(get_reservation_service)
+    # facility_image_service: FacilityImageService = Depends(get_facility_image_service),
 ):
-    # await facility_image_service.delete_all_for_facility(session, facility_id)
-    await facility_service.delete(session, id=facility_id)
+    if facility := await facility_service.get(session, id=facility_id):
+        if not await reservation_service.reservations_in_future_exist(
+            session, facility_id
+        ):
+            await facility_service.delete(session, db_obj=facility)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "msg": "Could not delete this facility, there are upcoming reservations"
+                },
+            )
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
