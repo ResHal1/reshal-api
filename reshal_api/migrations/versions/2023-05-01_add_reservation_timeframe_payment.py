@@ -35,7 +35,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("start_time", sa.DateTime(timezone=True), nullable=False),
         sa.Column("end_time", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("facility_id", sa.Uuid(), nullable=False),
+        sa.Column("facility_id", sa.Uuid(), nullable=True),
         sa.Column("user_id", sa.Uuid(), nullable=False),
         sa.Column("payment_id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
@@ -60,7 +60,6 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint(
             "id",
-            "facility_id",
             "user_id",
             "payment_id",
             name=op.f("reservation_pkey"),

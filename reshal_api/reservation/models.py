@@ -21,7 +21,7 @@ class Reservation(Base, TimestampMixin):
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     facility_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("facility.id", ondelete="SET NULL"),
+        ForeignKey("facility.id", ondelete="SET NULL"), nullable=True
     )
     price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     # timeframe_id: Mapped[uuid.UUID] = mapped_column(

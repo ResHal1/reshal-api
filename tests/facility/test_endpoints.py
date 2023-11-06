@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import humps
 import pytest
 from faker import Faker
@@ -384,12 +386,50 @@ async def test_facility_put(
 
 
 async def test_facility_delete(
-    admin_client: AuthClientFixture, facility_factory: FacilityFactory
+    admin_client: AuthClientFixture,
+    facility_factory: FacilityFactory,
+    payment_factory: PaymentFactory,
+    reservation_factory: ReservationFactory,
 ):
+    base_dt = datetime.now(tz=timezone.utc) + timedelta(days=-10)
     facility = facility_factory.create()
+    payment = payment_factory.create()
+    reservation_factory.create(
+        start_time=base_dt,
+        end_time=base_dt + timedelta(hours=1),
+        facility_id=facility.id,
+        payment_id=payment.id,
+    )
 
     response = await admin_client.client.delete(f"/facilities/{str(facility.id)}")
     assert response.status_code == 204
 
     response = await admin_client.client.get(f"/facilities/{str(facility.id)}")
     assert response.status_code == 404
+
+
+async def test_facility_delete_rasies_if_reserations_in_future(
+    admin_client: AuthClientFixture,
+    facility_factory: FacilityFactory,
+    payment_factory: PaymentFactory,
+    reservation_factory: ReservationFactory,
+):
+    base_dt = datetime.now(tz=timezone.utc) + timedelta(hours=1)
+    facility = facility_factory.create()
+    payment = payment_factory.create()
+    reservation_factory.create(
+        start_time=base_dt,
+        end_time=base_dt + timedelta(hours=1),
+        facility_id=facility.id,
+        payment_id=payment.id,
+    )
+
+    response = await admin_client.client.delete(f"/facilities/{str(facility.id)}")
+    assert response.status_code == 409
+    assert (
+        response.json()["detail"]["msg"]
+        == "Could not delete this facility, there are upcoming reservations"
+    )
+
+    response = await admin_client.client.get(f"/facilities/{str(facility.id)}")
+    assert response.status_code == 200

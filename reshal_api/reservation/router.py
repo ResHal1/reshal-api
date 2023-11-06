@@ -42,7 +42,9 @@ async def get_all_reservations(
     # reservations = await reservation_service.get_all_in_timeframe(
     #     session, startTime, endTime
     # )
-    reservations = await reservation_service.get_all(session)
+    reservations = await reservation_service.get_all(
+        session, Reservation.facility_id != None  # noqa: E711
+    )
     return reservations
 
 
