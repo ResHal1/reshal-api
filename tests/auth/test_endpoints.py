@@ -2,6 +2,7 @@ import pytest
 from faker import Faker
 from httpx import AsyncClient
 
+from reshal_api.auth import jwt as auth_jwt
 from reshal_api.auth.models import UserRole
 from reshal_api.config import Config
 from tests.factories import UserFactory
@@ -90,6 +91,12 @@ async def test_register_post_email_exists(
     assert response.json()["detail"] == "Email already exists"
 
 
+async def test_me_get_unauthorized(client: AsyncClient, user_factory: UserFactory):
+    response = await client.get("/auth/me")
+
+    assert response.status_code == 401
+
+
 async def test_me_get(auth_client: AuthClientFixture):
     response = await auth_client.client.get("/auth/me")
     assert response.status_code == 200
@@ -100,6 +107,22 @@ async def test_me_get(auth_client: AuthClientFixture):
     assert response_data["firstName"] == auth_client.user.first_name
     assert response_data["lastName"] == auth_client.user.last_name
     assert response_data["role"] == auth_client.user.role
+
+
+async def test_me_get_auth_header(client: AsyncClient, user_factory: UserFactory):
+    user = user_factory.create()
+    token = auth_jwt.create_access_token(user)
+    client.headers = {"authorization": f"Bearer {token}"}
+    response = await client.get("/auth/me")
+
+    assert response.status_code == 200
+
+    response_data = response.json()
+    assert response_data["id"] == str(user.id)
+    assert response_data["email"] == user.email
+    assert response_data["firstName"] == user.first_name
+    assert response_data["lastName"] == user.last_name
+    assert response_data["role"] == user.role
 
 
 @pytest.mark.parametrize(

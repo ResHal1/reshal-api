@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Annotated, Optional, cast
 
-from fastapi import Depends
+from fastapi import Depends, Header
+from fastapi.security.utils import get_authorization_scheme_param
 from jose import JWTError, jwt
 
 from reshal_api.config import get_config
@@ -13,7 +14,7 @@ from .security import OAuth2PasswordBearerCookie
 
 config = get_config()
 
-oauth2_scheme = OAuth2PasswordBearerCookie(token_url="/auth/token")
+oauth2_scheme = OAuth2PasswordBearerCookie(token_url="/auth/token", auto_error=False)
 
 
 def create_access_token(user: User) -> str:
@@ -25,12 +26,21 @@ def create_access_token(user: User) -> str:
     )
 
 
-def get_data_from_token(token: str = Depends(oauth2_scheme)) -> Optional[JWTData]:
-    if not token:
+def get_data_from_token(
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+    cookie_token: Annotated[str | None, Depends(oauth2_scheme)] = None,
+) -> Optional[JWTData]:
+    if authorization is None and cookie_token is None:
         raise InvalidToken()
+
+    if authorization:
+        _, token = get_authorization_scheme_param(authorization)
+    else:
+        token = cookie_token
+
     try:
         payload = jwt.decode(
-            token, config.SECRET_KEY, algorithms=[config.JWT_ALGORITHM]
+            cast(str, token), config.SECRET_KEY, algorithms=[config.JWT_ALGORITHM]
         )
     except JWTError:
         raise InvalidToken()
