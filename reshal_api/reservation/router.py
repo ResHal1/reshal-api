@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reshal_api.auth.dependencies import get_admin, get_user
 from reshal_api.auth.models import User, UserRole
 from reshal_api.base import DatetimeQuery
 from reshal_api.database import get_db_session
+from reshal_api.email import tasks as email_tasks
+from reshal_api.email.dependencies import EmailService, TemplatesService
 from reshal_api.exceptions import Conflict, Forbidden, NotFound
 from reshal_api.facility.dependencies import get_facility_service
 from reshal_api.facility.service import FacilityService
@@ -69,6 +71,9 @@ async def get_reservations_me(
 )
 async def create_reservation(
     data: ReservationCreateBase,
+    email_service: EmailService,
+    templates_service: TemplatesService,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db_session),
     reservation_service: ReservationService = Depends(get_reservation_service),
     facility_service: FacilityService = Depends(get_facility_service),
@@ -113,6 +118,19 @@ async def create_reservation(
     )
     reservation = await reservation_service.create(session, create_obj)
     payment.reservation_id = reservation.id
+
+    background_tasks.add_task(
+        email_tasks.send_reservation_confirmation,
+        email_service,
+        templates_service,
+        user.email,
+        user.first_name,
+        facility.name,
+        start_time=reservation.start_time,
+        end_time=reservation.end_time,
+        price=reservation.price,
+    )
+
     return reservation
 
 

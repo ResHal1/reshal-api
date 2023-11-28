@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Reshal: Reservation created{% endblock %}
+
+{% block content %}
+<h2 style="color: #58bf3f;">Reservation confirmation</h2>
+<p>Dear {{ first_name }},</p>
+<p>Your facility reservation has been completed successfully.</p>
+<p>Details:</p>
+<ul>
+    <li><strong>Facility:</strong> {{ facility_name }}</li>
+    <li><strong>Date and Time:</strong> {{ start_time }} to {{ end_time }}</li>
+    <li><strong>Price:</strong> {{ price }}</li>
+</ul>
+<p>Best Regards</p>
+{% endblock %}
