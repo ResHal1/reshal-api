@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff; /* White background */
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #ffffff;
+            color: #ffffff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #58bf3f 4px solid; /* Accent color */
+        }
+        header a {
+            color: #58bf3f; /* Accent color */
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 16px;
+        }
+        main {
+            padding: 20px 0;
+            background-color: #ffffff; /* White background */
+        }
+        main h2 {
+            color: #58bf3f; /* Accent color */
+        }
+        main p {
+            font-size: 18px;
+            line-height: 1.6em;
+            color: #333; /* Dark text color */
+        }
+        footer {
+            background: #ffffff;
+            color: #ffffff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-top: #58bf3f 4px solid; /* Accent color */
+        }
+        footer a {
+            color: #58bf3f; /* Accent color */
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 16px;
+        }
+        @media (max-width: 768px) {
+            header #logo {
+                text-align: center;
+                width: 100%;
+                float: none;
+            }
+            header #logo img {
+                width: 60%;
+            }
+            header ul {
+                padding-top: 20px;
+            }
+            header li {
+                float: none;
+                display: inline;
+            }
+            header #logo span {
+                display: block;
+                float: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div id="logo">
+              <h2 style="color: #58bf3f;">
+              Reshal
+              </h2>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>

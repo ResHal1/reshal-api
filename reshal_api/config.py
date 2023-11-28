@@ -20,6 +20,10 @@ class Environment(str, Enum):
         return self == Environment.TESTING
 
     @property
+    def is_debug(self):
+        return self in {Environment.LOCAL, Environment.TESTING}
+
+    @property
     def is_production(self):
         return self == Environment.PRODUCTION
 
@@ -74,6 +78,10 @@ class Config(BaseSettings):
     ACCESS_TOKEN_EXPIRE: int = 43800  # 30 days
     STATIC_DIR: str = "static"
     OTLP_GRPC_ENDPOINT: str = "http://tempo:4317"
+    AWS_ACCESS_KEY: str
+    AWS_SECRET_KEY: str
+    AWS_REGION: str = "eu-north-1"
+    EMAIL_WHITELIST: list[str] = ["admin@bartoszmagiera.dev"]
 
     class Config:
         env_prefix = "APP_"
@@ -81,4 +89,4 @@ class Config(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_config() -> Config:
-    return Config()
+    return Config()  # pyright: ignore

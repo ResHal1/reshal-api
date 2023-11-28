@@ -28,6 +28,8 @@ opentelemetry-exporter-otlp = "^1.17.0"
 opentelemetry-instrumentation-fastapi = "^0.38b0"
 opentelemetry-instrumentation-logging = "^0.38b0"
 prometheus-client = "^0.16.0"
+jinja2 = "^3.1.2"
+boto3 = "^1.29.7"
 
 [tool.poetry.scripts]
 reshal-api = "reshal_api.main:run"
