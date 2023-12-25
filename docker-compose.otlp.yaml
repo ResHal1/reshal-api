@@ -1,0 +1,110 @@
+x-logging: &default-logging
+  driver: loki
+  options:
+    loki-url: 'http://localhost:3100/api/prom/push'
+    loki-pipeline-stages: |
+      - multiline:
+          firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
+          max_wait_time: 3s
+      - regex:
+          expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
+
+version: "3.9"
+
+services:
+  loki:
+    container_name: loki
+    image: grafana/loki:2.8.0
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+
+  db:
+    container_name: reshal-db
+    image: postgres:15.2-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: reshal
+      POSTGRES_PASSWORD: reshal123
+      POSTGRES_DB: reshaldb
+
+  reshal-api:
+    container_name: reshal-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENVIRONMENT=LOCAL
+      - AWS_ACCESS_KEY=
+      - AWS_SECRET_KEY=
+      - AWS_REGION=
+      - OTLP_GRPC_ENDPOINT=http://tempo:4317
+      - UVICORN_HOST=0.0.0.0
+      - UVICORN_PORT=8080
+      - UVICORN_RELOAD=true
+      - UVICORN_WORKERS=1
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=reshal
+      - DB_PASSWORD=reshal123
+      - DB_NAME=reshaldb
+    depends_on:
+      - db
+      - loki
+    logging: *default-logging
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:v2.44.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./conf/prometheus:/workspace"
+    command:
+      - --config.file=/workspace/prometheus.yml
+      - --enable-feature=exemplar-storage
+    depends_on:
+      - loki
+    logging: *default-logging
+
+  tempo:
+    container_name: tempo
+    image: grafana/tempo:2.1.1
+    ports:
+      - "14250:14250"
+    command: ["--target=all", "--storage.trace.backend=local", "--storage.trace.local.path=/var/tempo", "--auth.enabled=false"]
+    depends_on:
+      - loki
+    logging: *default-logging
+
+  grafana:
+    container_name: grafana
+    image: "grafana/grafana:9.5.2"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./conf/grafana/:/etc/grafana/provisioning/datasources
+      - ./conf/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./conf/dashboards:/etc/grafana/dashboards
+    depends_on:
+      - loki
+      - prometheus
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    logging: *default-logging
+
+
+
+volumes:
+  pg_data:
+    driver: "local"
